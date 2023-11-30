@@ -13,6 +13,10 @@ const allModels = Schema({
     type: String,
     required: true,
   },
+  vehicleType: {
+    type: [String],
+    default: [],
+  },
 });
 
 module.exports = model("brands", allModels);

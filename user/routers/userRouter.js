@@ -11,7 +11,7 @@ const {
 router.route("/login").post(login);
 router.route("/register").post(register);
 router.route("/addUser").post(addUser);
-router.route("/uploadFiles").post(upload.single("images"), uploadFiles);
+router.route("/uploadFiles").post(upload.any("images"), uploadFiles);
 router.route("/addBrand").post(brandController);
 router.route("/allBrands").get(getAllBrands);
 

@@ -1,7 +1,23 @@
 import { Schema } from "mongoose";
 
-const productSchema = Schema({
-  title: {
+const vehicleSchema = Schema({
+  accelration: {
+    type: String,
+  },
+  bodyStyle: {
+    type: String,
+  },
+  bootSpace: {
+    type: String,
+  },
+  condition: {
+    type: String,
+    required: true,
+  },
+  co2Emission: {
+    type: String,
+  },
+  country: {
     type: String,
     required: true,
   },
@@ -9,85 +25,81 @@ const productSchema = Schema({
     type: String,
     required: true,
   },
-  carCondition: {
+  door: {
+    type: Number,
+  },
+  driverPosition: {
     type: String,
-    required: true,
+  },
+  engineSize: {
+    type: String,
+  },
+  exteriorColor: {
+    type: String,
+  },
+  fuelType: {
+    type: String,
+  },
+  fuelConsumption: {
+    type: String,
+  },
+  gearBox: {
+    type: String,
+  },
+  interiorColor: {
+    type: String,
+  },
+  kmDriven: {
+    type: String,
   },
   make: {
     type: String,
+    required: true,
+  },
+  media: {
+    type: [String],
     required: true,
   },
   model: {
     type: String,
     required: true,
   },
-  year: {
-    type: String,
-    required: true,
-  },
-  bodyStyle: {
-    type: String,
-    required: true,
-  },
-  gearBox: {
-    type: String,
-    required: true,
-  },
-  engineSize: {
-    type: String,
-    required: true,
-  },
-  fuelConsumption: {
-    type: String,
-    required: true,
-  },
-  fuelType: {
-    type: String,
-    required: true,
-  },
   mileage: {
     type: String,
-    required: true,
   },
-  exteriorColor: {
-    type: String,
-    required: true,
-  },
-  interiorColor: {
-    type: String,
-    required: true,
-  },
-  actual_price: {
-    type: String,
-    required: true,
-  },
-  discount: {
-    type: String,
-    required: true,
-  },
-  final_price: {
-    type: String,
-    required: true,
-  },
-  variants_id: {
+  price: {
     type: String,
     required: true,
   },
   rating: {
     type: String,
-    required: true,
-  },
-  variants: {
-    type: [{ size: String }],
-    default: [],
   },
   reviews: {
     type: [{ type: String }],
     default: [],
   },
-  inStock: {
-    type: Boolean,
+  state: {
+    type: String,
     required: true,
-    default: true,
+  },
+  seat: {
+    type: String,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
+  title: {
+    type: String,
+    required: true,
+  },
+  userId: {
+    type: String,
+    // required: true,
+  },
+  year: {
+    type: String,
   },
 });
+
+module.exports = model("vehicles", vehicleSchema);
