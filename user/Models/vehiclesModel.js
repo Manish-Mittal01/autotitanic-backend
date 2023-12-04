@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+const { Schema, model } = require("mongoose");
 
 const vehicleSchema = Schema({
   accelration: {
@@ -18,6 +18,10 @@ const vehicleSchema = Schema({
     type: String,
   },
   country: {
+    type: String,
+    required: true,
+  },
+  currency: {
     type: String,
     required: true,
   },
@@ -54,7 +58,6 @@ const vehicleSchema = Schema({
   },
   make: {
     type: String,
-    required: true,
   },
   media: {
     type: [String],
@@ -62,7 +65,6 @@ const vehicleSchema = Schema({
   },
   model: {
     type: String,
-    required: true,
   },
   mileage: {
     type: String,
@@ -71,6 +73,7 @@ const vehicleSchema = Schema({
     type: String,
     required: true,
   },
+
   rating: {
     type: String,
   },
@@ -85,6 +88,7 @@ const vehicleSchema = Schema({
   seat: {
     type: String,
   },
+  // vehicle type
   type: {
     type: String,
     required: true,

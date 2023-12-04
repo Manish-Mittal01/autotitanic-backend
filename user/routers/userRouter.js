@@ -7,6 +7,10 @@ const {
   brandController,
   getAllBrands,
 } = require("../controllers/brandController");
+const {
+  getAllvehicles,
+  addVehicle,
+} = require("../controllers/vehicleController");
 
 router.route("/login").post(login);
 router.route("/register").post(register);
@@ -14,5 +18,7 @@ router.route("/addUser").post(addUser);
 router.route("/uploadFiles").post(upload.any("images"), uploadFiles);
 router.route("/addBrand").post(brandController);
 router.route("/allBrands").get(getAllBrands);
+router.route("/allVehicles").get(getAllvehicles);
+router.route("/vehicle/add").post(addVehicle);
 
 module.exports = router;
