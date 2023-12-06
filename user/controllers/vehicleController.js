@@ -1,7 +1,7 @@
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
-const vehiclesModel = require("../Models/vehiclesModel");
+const vehiclesModel = require("../../Models/vehiclesModel");
 
 module.exports.addVehicle = async (req, res) => {
   try {

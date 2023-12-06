@@ -1,7 +1,7 @@
 const { StatusCode } = require("../../common/Constants");
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
-const UserModel = require("../Models/UserModel");
+const UserModel = require("../../Models/UserModel");
 
 module.exports.register = async (req, res) => {
   try {

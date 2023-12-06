@@ -1,7 +1,7 @@
 const { StatusCode } = require("../../common/Constants");
 const { LogService } = require("../../common/logService");
 const { ResponseService } = require("../../common/responseService");
-const UserModel = require("../Models/UserModel");
+const UserModel = require("../../Models/UserModel");
 
 class UserServices {
   static async checkUserActive(userId) {

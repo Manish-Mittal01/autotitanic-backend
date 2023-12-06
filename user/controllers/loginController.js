@@ -1,4 +1,4 @@
-const User = require("../Models/UserModel");
+const User = require("../../Models/UserModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { StatusCode } = require("../../common/Constants");
@@ -7,9 +7,9 @@ const { checkRequiredFields } = require("../../common/utility");
 const { success } = require("../../common/Constants").Status;
 
 module.exports.login = async (req, res) => {
-  const { mobile, password } = req.body;
+  const { email, password } = req.body;
 
-  const validationError = checkRequiredFields({ mobile, password });
+  const validationError = checkRequiredFields({ email, password });
   if (validationError)
     return ResponseService.failed(res, validationError, StatusCode.notFound);
 
@@ -21,7 +21,7 @@ module.exports.login = async (req, res) => {
     );
 
   const user = await User.findOne({
-    mobile: mobile,
+    email,
   });
 
   if (!user)
@@ -39,7 +39,7 @@ module.exports.login = async (req, res) => {
   console.log(userAvatar.avatar);
 
   const avatarURL = `http://localhost:4000/user-avatars/${userAvatar.avatar}`;
-  if (user.mobile === mobile && isPasswordCorrect) {
+  if (user.email === email && isPasswordCorrect) {
     const token = jwt.sign(
       {
         userId: user.userId,
@@ -60,7 +60,7 @@ module.exports.login = async (req, res) => {
   } else {
     return ResponseService.failed(
       res,
-      "Incorrect Mobile or Password",
+      "Incorrect Email or Password",
       StatusCode.unauthorized
     );
   }

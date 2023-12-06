@@ -1,6 +1,6 @@
 const bcrypt = require("bcrypt");
-const User = require("../Models/UserModel");
-const UserAvatar = require("../Models/userAvatarModel");
+const User = require("../../Models/UserModel");
+const UserAvatar = require("../../Models/userAvatarModel");
 const { UserServices } = require("../services/userServices");
 const { ResponseService } = require("../../common/responseService");
 const { StatusCode, passwordMode } = require("../../common/Constants");

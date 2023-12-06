@@ -1,6 +1,6 @@
 const { Schema, model } = require("mongoose");
 
-const allModels = Schema({
+const modelSchema = Schema({
   label: {
     type: String,
     required: true,
@@ -9,7 +9,7 @@ const allModels = Schema({
     type: String,
     required: true,
   },
-  brandId: {
+  makeId: {
     type: String,
     required: true,
   },
@@ -19,4 +19,4 @@ const allModels = Schema({
   },
 });
 
-module.exports = model("brands", allModels);
+module.exports = model("models", modelSchema);
