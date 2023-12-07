@@ -18,7 +18,7 @@ const {
 // router.route("/login").post(login);
 // router.route("/register").post(register);
 // router.route("/addUser").post(addUser);
-router.route("/uploadFiles").post(upload.any("images"), uploadFiles);
+router.route("/uploadFiles").post(upload.array("images"), uploadFiles);
 router.route("/addMake").post(addMake);
 router.route("/allMake").get(getAllMake);
 router.route("/makeDetails/:id").get(getMakeDetails);

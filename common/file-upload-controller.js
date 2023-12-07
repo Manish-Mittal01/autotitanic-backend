@@ -8,6 +8,7 @@ const {
 } = require("firebase/storage");
 const multer = require("multer");
 const { ResponseService } = require("./responseService");
+const { StatusCode } = require("./Constants");
 
 const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
@@ -16,24 +17,37 @@ module.exports.upload = multer({ storage: multer.memoryStorage() });
 
 module.exports.uploadFiles = async (req, res) => {
   try {
-    // console.log("req file", req.file);
-    const storageRef = ref(
-      storage,
-      `autotitanic/${req.file.originalname}/${Date.now()}`
-    );
-    const metaData = {
-      contentType: req.file.mimetype,
-    };
-    const snapShot = await uploadBytesResumable(
-      storageRef,
-      req.file.buffer,
-      metaData
-    );
+    const files = req.file ? [req.file] : req.files;
+    let downloadURLs = [];
+    console.log("files", files);
 
-    const downloadURL = await getDownloadURL(snapShot.ref);
+    if (!files)
+      return ResponseService.failed(
+        res,
+        "images not found",
+        StatusCode.notFound
+      );
+
+    for (let file of files) {
+      const storageRef = ref(
+        storage,
+        `autotitanic/${file.originalname}/${Date.now()}`
+      );
+      const metaData = {
+        contentType: file.mimetype,
+      };
+      const snapShot = await uploadBytesResumable(
+        storageRef,
+        file.buffer,
+        metaData
+      );
+
+      const downloadURL = await getDownloadURL(snapShot.ref);
+      downloadURLs.push(downloadURL);
+    }
 
     const responseData = {
-      url: downloadURL,
+      url: downloadURLs,
     };
     return ResponseService.success(res, "File uploaded", responseData);
   } catch (error) {
