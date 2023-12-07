@@ -19,7 +19,6 @@ module.exports.uploadFiles = async (req, res) => {
   try {
     const files = req.file ? [req.file] : req.files;
     let downloadURLs = [];
-    console.log("files", files);
 
     if (!files)
       return ResponseService.failed(
@@ -29,6 +28,12 @@ module.exports.uploadFiles = async (req, res) => {
       );
 
     for (let file of files) {
+      if (file.mimetype.split("/")[0] !== "image")
+        return ResponseService.failed(
+          res,
+          "Only images are allowed",
+          StatusCode.badRequest
+        );
       const storageRef = ref(
         storage,
         `autotitanic/${file.originalname}/${Date.now()}`
@@ -43,12 +48,10 @@ module.exports.uploadFiles = async (req, res) => {
       );
 
       const downloadURL = await getDownloadURL(snapShot.ref);
-      downloadURLs.push(downloadURL);
+      downloadURLs.push({ url: downloadURL, type: file.mimetype });
     }
 
-    const responseData = {
-      url: downloadURLs,
-    };
+    const responseData = [...downloadURLs];
     return ResponseService.success(res, "File uploaded", responseData);
   } catch (error) {
     console.log("file upload error", error);

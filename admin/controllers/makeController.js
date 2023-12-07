@@ -20,20 +20,24 @@ module.exports.getAllMake = async (req, res) => {
 
 module.exports.addMake = async (req, res) => {
   try {
-    const { label, vehicleType, logo } = req.body;
+    const { label, vehicleType, logo, value } = req.body;
 
-    const validationError = checkRequiredFields({ label, vehicleType, logo });
+    const validationError = checkRequiredFields({
+      label,
+      vehicleType,
+      logo,
+      value,
+    });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newMake = { label, vehicleType, logo };
+    const newMake = { label, vehicleType, logo, value };
     const make = new makeModel(newMake);
 
     const isMakeExist = await makeModel.findOne({
       label: label,
     });
 
-    let result = {};
     if (isMakeExist) {
       return ResponseService.failed(
         res,
@@ -42,7 +46,7 @@ module.exports.addMake = async (req, res) => {
       );
     }
 
-    result = await make.save();
+    const result = await make.save();
 
     return ResponseService.success(res, "Make added successfully", result);
   } catch (error) {
