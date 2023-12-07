@@ -2,14 +2,11 @@ const { ResponseService } = require("../../common/responseService");
 const makeModel = require("../../Models/makeModel");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
-const allModels = require("../../Models/allModels");
 
 module.exports.getAllModels = async (req, res) => {
   try {
     const { makeId } = req.body;
-    const allModel = await allModels.find({ makeId: makeId }, null, {
-      sort: { label: 1 },
-    });
+    const allMake = await makeModel.find({}, null, { sort: { label: 1 } });
 
     return ResponseService.success(
       res,
@@ -22,22 +19,26 @@ module.exports.getAllModels = async (req, res) => {
   }
 };
 
-module.exports.addMake = async (req, res) => {
+module.exports.addModel = async (req, res) => {
   try {
-    const { label, vehicleType, logo } = req.body;
+    const { label, vehicleType, logo, value } = req.body;
 
-    const validationError = checkRequiredFields({ label, vehicleType, logo });
+    const validationError = checkRequiredFields({
+      label,
+      vehicleType,
+      logo,
+      value,
+    });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newMake = { label, vehicleType, logo };
+    const newMake = { label, vehicleType, logo, value };
     const make = new makeModel(newMake);
 
     const isMakeExist = await makeModel.findOne({
       label: label,
     });
 
-    let result = {};
     if (isMakeExist) {
       return ResponseService.failed(
         res,
@@ -46,7 +47,7 @@ module.exports.addMake = async (req, res) => {
       );
     }
 
-    result = await make.save();
+    const result = await make.save();
 
     return ResponseService.success(res, "Make added successfully", result);
   } catch (error) {
@@ -55,15 +56,40 @@ module.exports.addMake = async (req, res) => {
   }
 };
 
-module.exports.updateMake = async (req, res) => {
+module.exports.getModelDetails = async (req, res) => {
   try {
-    const { label, vehicleType, logo, makeId } = req.body;
+    const { id } = req.params;
+
+    const makeDetails = await makeModel.find({ _id: id });
+
+    if (!makeDetails)
+      return ResponseService.failed(
+        res,
+        "Invalid make id",
+        StatusCode.notFound
+      );
+
+    return ResponseService.success(
+      res,
+      "Make list found successfully",
+      makeDetails
+    );
+  } catch (error) {
+    console.log("error", error);
+    return ResponseService.failed(res, "Something wrong happend");
+  }
+};
+
+module.exports.updateModel = async (req, res) => {
+  try {
+    const { label, vehicleType, logo, makeId, value } = req.body;
 
     const validationError = checkRequiredFields({
       label,
       vehicleType,
       logo,
       makeId,
+      value,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
@@ -84,6 +110,7 @@ module.exports.updateMake = async (req, res) => {
       },
       {
         $set: {
+          lebel: label,
           vehicleType: vehicleType,
           logo: logo,
           value: value,
@@ -98,7 +125,7 @@ module.exports.updateMake = async (req, res) => {
   }
 };
 
-module.exports.deleteMake = async (req, res) => {
+module.exports.deleteModel = async (req, res) => {
   try {
     const { makeId } = req.body;
 

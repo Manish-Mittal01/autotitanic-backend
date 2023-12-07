@@ -81,13 +81,14 @@ module.exports.getMakeDetails = async (req, res) => {
 
 module.exports.updateMake = async (req, res) => {
   try {
-    const { label, vehicleType, logo, makeId } = req.body;
+    const { label, vehicleType, logo, makeId, value } = req.body;
 
     const validationError = checkRequiredFields({
       label,
       vehicleType,
       logo,
       makeId,
+      value,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
@@ -108,6 +109,7 @@ module.exports.updateMake = async (req, res) => {
       },
       {
         $set: {
+          lebel: label,
           vehicleType: vehicleType,
           logo: logo,
           value: value,
