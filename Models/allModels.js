@@ -6,15 +6,11 @@ const modelSchema = Schema(
       type: String,
       required: true,
     },
-    value: {
-      type: String,
-      required: true,
-    },
     makeId: {
       type: String,
       required: true,
     },
-    vehicleType: {
+    type: {
       type: [String],
       default: [],
     },

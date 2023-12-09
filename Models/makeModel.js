@@ -6,15 +6,11 @@ const makeSchema = Schema(
       type: String,
       required: true,
     },
-    value: {
-      type: String,
-      required: true,
-    },
     logo: {
       type: String,
       required: true,
     },
-    vehicleType: {
+    type: {
       type: [String],
       default: [],
     },

@@ -1,17 +1,26 @@
 const { ResponseService } = require("../../common/responseService");
-const makeModel = require("../../Models/makeModel");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
+const allModels = require("../../Models/allModels");
 
 module.exports.getAllModels = async (req, res) => {
   try {
-    const { makeId } = req.body;
-    const allMake = await makeModel.find({}, null, { sort: { label: 1 } });
+    const { makeId } = req.params;
+    if (!makeId)
+      return ResponseService.failed(
+        res,
+        "makeId is requierd",
+        StatusCode.notFound
+      );
+
+    const allModel = await allModels.find({ brandId: makeId }, null, {
+      sort: { label: 1 },
+    });
 
     return ResponseService.success(
       res,
       "Make list found successfully",
-      allMake
+      allModel
     );
   } catch (error) {
     console.log("error", error);
@@ -21,35 +30,34 @@ module.exports.getAllModels = async (req, res) => {
 
 module.exports.addModel = async (req, res) => {
   try {
-    const { label, vehicleType, logo, value } = req.body;
+    const { label, type, makeId } = req.body;
 
     const validationError = checkRequiredFields({
       label,
-      vehicleType,
-      logo,
-      value,
+      type,
+      makeId,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newMake = { label, vehicleType, logo, value };
-    const make = new makeModel(newMake);
+    const newModel = { label, type, makeId };
+    const model = new allModels(newModel);
 
-    const isMakeExist = await makeModel.findOne({
+    const isModelExist = await allModels.findOne({
       label: label,
     });
 
-    if (isMakeExist) {
+    if (isModelExist) {
       return ResponseService.failed(
         res,
-        "Make with label already exits",
+        "Model with label already exits",
         StatusCode.forbidden
       );
     }
 
-    const result = await make.save();
+    const result = await model.save();
 
-    return ResponseService.success(res, "Make added successfully", result);
+    return ResponseService.success(res, "Model added successfully", result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, error, 400);
@@ -59,20 +67,22 @@ module.exports.addModel = async (req, res) => {
 module.exports.getModelDetails = async (req, res) => {
   try {
     const { id } = req.params;
+    if (!id)
+      return ResponseService.failed(res, "Id is required", StatusCode.notFound);
 
-    const makeDetails = await makeModel.find({ _id: id });
+    const modelDetails = await allModels.find({ _id: id });
 
-    if (!makeDetails)
+    if (!modelDetails)
       return ResponseService.failed(
         res,
-        "Invalid make id",
+        "Model not found",
         StatusCode.notFound
       );
 
     return ResponseService.success(
       res,
-      "Make list found successfully",
-      makeDetails
+      "Model found successfully",
+      modelDetails
     );
   } catch (error) {
     console.log("error", error);
@@ -82,43 +92,41 @@ module.exports.getModelDetails = async (req, res) => {
 
 module.exports.updateModel = async (req, res) => {
   try {
-    const { label, vehicleType, logo, makeId, value } = req.body;
+    const { label, type, makeId, id } = req.body;
 
     const validationError = checkRequiredFields({
       label,
-      vehicleType,
-      logo,
+      type,
       makeId,
-      value,
+      id,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const isMakeExist = await makeModel.findOne({
-      _id: makeId,
+    const isModelExist = await allModels.findOne({
+      _id: id,
     });
 
-    if (!isMakeExist)
+    if (!isModelExist)
       return ResponseService.failed(
         res,
-        "Make not found with thid id",
+        "Model not found",
         StatusCode.notFound
       );
-    const result = await makeModel.updateOne(
+    const result = await allModels.updateOne(
       {
-        _id: makeId,
+        _id: id,
       },
       {
         $set: {
           lebel: label,
-          vehicleType: vehicleType,
-          logo: logo,
-          value: value,
+          type: type,
+          makeId: makeId,
         },
       }
     );
 
-    return ResponseService.success(res, "Make added successfully", result);
+    return ResponseService.success(res, "Model added successfully", result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, error, 400);
@@ -127,29 +135,29 @@ module.exports.updateModel = async (req, res) => {
 
 module.exports.deleteModel = async (req, res) => {
   try {
-    const { makeId } = req.body;
+    const { modelId } = req.body;
 
-    const validationError = checkRequiredFields({ makeId });
+    const validationError = checkRequiredFields({ modelId });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const isMakeExist = await makeModel.findOne({
-      _id: makeId,
+    const isModelExist = await allModels.findOne({
+      _id: modelId,
     });
 
-    if (!isMakeExist)
+    if (!isModelExist)
       return ResponseService.failed(
         res,
-        "Make not found with thid id",
+        "Model not found",
         StatusCode.notFound
       );
-    const result = await makeModel.deleteOne({
-      _id: makeId,
+    const result = await allModels.deleteOne({
+      _id: modelId,
     });
 
-    return ResponseService.success(res, "Make added successfully", result);
+    return ResponseService.success(res, "Model removed successfully", result);
   } catch (error) {
     console.log("api error", error);
-    return ResponseService.failed(res, error, 400);
+    return ResponseService.failed(res, "Something wrong happend");
   }
 };

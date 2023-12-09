@@ -2,10 +2,16 @@ const { ResponseService } = require("../../common/responseService");
 const makeModel = require("../../Models/makeModel");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
+const allModels = require("../../Models/allModels");
 
 module.exports.getAllMake = async (req, res) => {
   try {
     const allMake = await makeModel.find({}, null, { sort: { label: 1 } });
+
+    for (let make of allMake) {
+      const models = await allModels.find({ _id: make._id });
+      make._doc.models = models;
+    }
 
     return ResponseService.success(
       res,
@@ -20,18 +26,17 @@ module.exports.getAllMake = async (req, res) => {
 
 module.exports.addMake = async (req, res) => {
   try {
-    const { label, vehicleType, logo, value } = req.body;
+    const { label, type, logo } = req.body;
 
     const validationError = checkRequiredFields({
       label,
-      vehicleType,
+      type,
       logo,
-      value,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newMake = { label, vehicleType, logo, value };
+    const newMake = { label, type, logo };
     const make = new makeModel(newMake);
 
     const isMakeExist = await makeModel.findOne({
@@ -81,14 +86,13 @@ module.exports.getMakeDetails = async (req, res) => {
 
 module.exports.updateMake = async (req, res) => {
   try {
-    const { label, vehicleType, logo, makeId, value } = req.body;
+    const { label, type, logo, makeId } = req.body;
 
     const validationError = checkRequiredFields({
       label,
-      vehicleType,
+      type,
       logo,
       makeId,
-      value,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
@@ -110,9 +114,8 @@ module.exports.updateMake = async (req, res) => {
       {
         $set: {
           lebel: label,
-          vehicleType: vehicleType,
+          type: type,
           logo: logo,
-          value: value,
         },
       }
     );
@@ -149,6 +152,6 @@ module.exports.deleteMake = async (req, res) => {
     return ResponseService.success(res, "Make added successfully", result);
   } catch (error) {
     console.log("api error", error);
-    return ResponseService.failed(res, error, 400);
+    return ResponseService.failed(res, "Something wrong happend");
   }
 };
