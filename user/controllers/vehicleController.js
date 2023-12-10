@@ -50,15 +50,39 @@ module.exports.addVehicle = async (req, res) => {
 
 module.exports.getAllvehicles = async (req, res) => {
   try {
-    const allVehicles = await vehiclesModel.find();
+    let { filters, paginationDetails, sort } = req.body;
+    paginationDetails = paginationDetails
+      ? paginationDetails
+      : { page: 1, limit: 10 };
+
+    let allVehicles = [];
+    if (sort) {
+      allVehicles = await vehiclesModel.find({ ...filters }, null, {
+        skip: (paginationDetails.page - 1) * paginationDetails.limit,
+        limit: paginationDetails.limit,
+        sort: sort,
+      });
+    } else {
+      allVehicles = await vehiclesModel.find({ ...filters }, null, {
+        skip: (paginationDetails.page - 1) * paginationDetails.limit,
+        limit: paginationDetails.limit,
+      });
+    }
+
+    const totalCount = allVehicles.length;
+
+    const response = {
+      items: allVehicles,
+      totalCount: totalCount,
+    };
 
     return ResponseService.success(
       res,
       "vehicles list found successfully",
-      allVehicles
+      response
     );
   } catch (error) {
     console.log("error", error);
-    return ResponseService.failed(res, "Something wrong happend");
+    return ResponseService.failed(res, "Something wrong happened");
   }
 };

@@ -36,7 +36,7 @@ router.route("/allModel").get(getAllModels);
 router.route("/modelDetails/:id").get(getModelDetails);
 router.route("/updateModel").post(updateModel);
 router.route("/deletemodel").post(deleteModel);
-router.route("/allVehicles").get(getAllvehicles);
-router.route("/vehicle/add").post(addVehicle);
+router.route("/allVehicles").post(getAllvehicles);
+router.route("/addVehicle").post(addVehicle);
 
 module.exports = router;

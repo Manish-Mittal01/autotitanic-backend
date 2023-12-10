@@ -13,14 +13,12 @@ module.exports.getAllMake = async (req, res) => {
     if (type) {
       allMake = await makeModel.find({ type: [type] }, null, {
         sort: { label: 1 },
-        limit: limit,
-        skip: (page - 1) * limit,
       });
-    } else {
+    } else if (page) {
       allMake = await makeModel.find({}, null, {
         sort: { label: 1 },
-        limit: limit,
         skip: (page - 1) * limit,
+        limit: limit,
       });
     }
 
@@ -29,10 +27,17 @@ module.exports.getAllMake = async (req, res) => {
       make._doc.models = models;
     }
 
+    const totalCount = allMake.length;
+
+    const response = {
+      items: allMake,
+      totalCount: totalCount,
+    };
+
     return ResponseService.success(
       res,
       "Make list found successfully",
-      allMake
+      response
     );
   } catch (error) {
     console.log("error", error);
@@ -118,11 +123,7 @@ module.exports.updateMake = async (req, res) => {
     });
 
     if (!isMakeExist)
-      return ResponseService.failed(
-        res,
-        "Make not found with thid id",
-        StatusCode.notFound
-      );
+      return ResponseService.failed(res, "Make not found", StatusCode.notFound);
     const result = await makeModel.updateOne(
       {
         _id: makeId,
@@ -156,11 +157,7 @@ module.exports.deleteMake = async (req, res) => {
     });
 
     if (!isMakeExist)
-      return ResponseService.failed(
-        res,
-        "Make not found with thid id",
-        StatusCode.notFound
-      );
+      return ResponseService.failed(res, "Make not found", StatusCode.notFound);
     const result = await makeModel.deleteOne({
       _id: makeId,
     });
