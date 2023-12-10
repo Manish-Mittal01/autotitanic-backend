@@ -15,12 +15,12 @@ const {
   addVehicle,
 } = require("../user/controllers/vehicleController");
 const {
-  getAllModels,
   addModel,
   getModelDetails,
   updateModel,
   deleteModel,
 } = require("../admin/controllers/ModelController");
+const { getAllModels } = require("../user/controllers/ModelController");
 
 // router.route("/login").post(login);
 // router.route("/register").post(register);

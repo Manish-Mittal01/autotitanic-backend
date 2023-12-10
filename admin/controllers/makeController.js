@@ -6,7 +6,23 @@ const allModels = require("../../Models/allModels");
 
 module.exports.getAllMake = async (req, res) => {
   try {
-    const allMake = await makeModel.find({}, null, { sort: { label: 1 } });
+    const { page = 1, limit = 10, type } = req.query;
+
+    let allMake = [];
+
+    if (type) {
+      allMake = await makeModel.find({ type: [type] }, null, {
+        sort: { label: 1 },
+        limit: limit,
+        skip: (page - 1) * limit,
+      });
+    } else {
+      allMake = await makeModel.find({}, null, {
+        sort: { label: 1 },
+        limit: limit,
+        skip: (page - 1) * limit,
+      });
+    }
 
     for (let make of allMake) {
       const models = await allModels.find({ _id: make._id });
@@ -120,7 +136,7 @@ module.exports.updateMake = async (req, res) => {
       }
     );
 
-    return ResponseService.success(res, "Make added successfully", result);
+    return ResponseService.success(res, "Make updated successfully", result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, error, 400);

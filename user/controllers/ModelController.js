@@ -1,5 +1,5 @@
-const { StatusCode } = require("../../common/Constants");
 const { ResponseService } = require("../../common/responseService");
+const { StatusCode } = require("../../common/Constants");
 const allModels = require("../../Models/allModels");
 
 module.exports.getAllModels = async (req, res) => {
