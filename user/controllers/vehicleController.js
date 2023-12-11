@@ -86,3 +86,24 @@ module.exports.getAllvehicles = async (req, res) => {
     return ResponseService.failed(res, "Something wrong happened");
   }
 };
+
+module.exports.getResultCount = async (req, res) => {
+  try {
+    let { filters } = req.body;
+
+    let vehiclesCount = await vehiclesModel.count({ ...filters });
+
+    const response = {
+      totalCount: vehiclesCount,
+    };
+
+    return ResponseService.success(
+      res,
+      "vehicles list found successfully",
+      response
+    );
+  } catch (error) {
+    console.log("error", error);
+    return ResponseService.failed(res, "Something wrong happened");
+  }
+};

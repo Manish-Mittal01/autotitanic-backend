@@ -16,7 +16,7 @@ module.exports.getAllMake = async (req, res) => {
       });
     } else if (page) {
       allMake = await makeModel.find({}, null, {
-        sort: { label: 1 },
+        // sort: { label: 1 },
         skip: (page - 1) * limit,
         limit: limit,
       });

@@ -13,6 +13,7 @@ const {
 const {
   getAllvehicles,
   addVehicle,
+  getResultCount,
 } = require("../user/controllers/vehicleController");
 const {
   addModel,
@@ -38,5 +39,6 @@ router.route("/updateModel").post(updateModel);
 router.route("/deletemodel").post(deleteModel);
 router.route("/allVehicles").post(getAllvehicles);
 router.route("/addVehicle").post(addVehicle);
+router.route("/getResultCount").post(getResultCount);
 
 module.exports = router;
