@@ -106,7 +106,7 @@ const vehicleSchema = Schema(
       type: String,
     },
   },
-  { versionKey: false }
+  { versionKey: false, timestamps: true }
 );
 
 module.exports = model("vehicles", vehicleSchema);

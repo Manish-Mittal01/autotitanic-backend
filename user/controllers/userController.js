@@ -1,24 +1,11 @@
 const bcrypt = require("bcrypt");
 const User = require("../../Models/UserModel");
 const UserAvatar = require("../../Models/userAvatarModel");
-const { UserServices } = require("../services/userServices");
 const { ResponseService } = require("../../common/responseService");
 const { StatusCode, passwordMode } = require("../../common/Constants");
 const sharp = require("sharp");
 const path = require("path");
 const fs = require("fs");
-
-class UserController {
-  static checkUserActive = async (userId) =>
-    UserServices.checkUserActive(userId);
-
-  static getAllUsers = async (req, res) => UserServices.getAllUsers(req, res);
-
-  static getWallet = async (req, res) => UserServices.getWallet(req, res);
-
-  static handleReferralCode = async (userId, referralCode) =>
-    UserServices.handleReferralCode(userId, referralCode);
-}
 
 module.exports.addUser = async (req, res) => {
   const { mobile, password, email, name } = req.body;
@@ -93,5 +80,3 @@ module.exports.addUser = async (req, res) => {
 
   return ResponseService.success(res, "user registered successfully");
 };
-
-module.exports.UserController = UserController;

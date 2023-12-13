@@ -15,7 +15,7 @@ const modelSchema = Schema(
       default: [],
     },
   },
-  { versionKey: false }
+  { timestamps: true, versionKey: false }
 );
 
 module.exports = model("models", modelSchema);

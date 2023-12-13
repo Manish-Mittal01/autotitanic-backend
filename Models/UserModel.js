@@ -1,14 +1,13 @@
 const { Schema, model } = require("mongoose");
 const jwt = require("jsonwebtoken");
-const shortid = require("shortid");
 
 const userSchema = Schema(
   {
-    userId: {
-      type: String,
-      default: shortid.generate,
-    },
     mobile: {
+      type: Number,
+      required: true,
+    },
+    countryCode: {
       type: String,
       required: true,
     },
@@ -52,6 +51,8 @@ userSchema.methods.generateJWT = () => {
     {
       _id: this._id,
       mobile: this.mobile,
+      email: this.email,
+      userType: this.userType,
     },
     process.env.JWT_SECRET_KEY,
     { expiresIn: "7d" }
