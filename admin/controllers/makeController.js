@@ -23,7 +23,7 @@ module.exports.getAllMake = async (req, res) => {
     }
 
     for (let make of allMake) {
-      const models = await allModels.find({ _id: make._id });
+      const models = await allModels.find({ makeId: make._id });
       make._doc.models = models;
     }
 
