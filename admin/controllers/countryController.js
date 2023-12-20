@@ -3,64 +3,46 @@ const makeModel = require("../../Models/makeModel");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 const allModels = require("../../Models/allModels");
+const countryModel = require("../../Models/countryModel");
 
-module.exports.getAllMake = async (req, res) => {
+module.exports.getAllCountries = async (req, res) => {
   try {
-    const { page = 1, limit = 10, type } = req.query;
+    const { page, limit } = req.query;
 
-    let allMake = [];
+    let allCountries = [];
     let cursor = {};
 
-    if (type) {
-      cursor = await makeModel
-        .find({ type: [type] }, null, {
-          sort: { label: 1 },
-        })
-        .lean()
-        .cursor();
-    } else if (page) {
-      cursor = await makeModel
+    if (!page) {
+      cursor = await countryModel
         .find({}, null, {
-          sort: { createdAt: 1 },
-          // sort: { label: 1 },
-          // skip: (page - 1) * limit,
-          // limit: limit,
+          sort: { name: 1 },
         })
         .lean()
         .cursor();
+    } else {
+      cursor = await countryModel.find({}).lean().cursor();
     }
 
-    cursor.on("data", function (make) {
-      allMake.push(make);
+    cursor.on("data", function (country) {
+      allCountries.push(country);
     });
 
     cursor.on("end", async () => {
-      for (let make of allMake) {
-        const models = await allModels.find({ makeId: make._id });
-        make.models = models;
+      for (let country of allCountries) {
+        const models = await allModels.find({ makeId: country._id });
+        country.models = models;
       }
 
-      // const m = await makeModel.aggregate([
-      //   {
-      //     $lookup: {
-      //       from: "allModels",
-      //       localField: "_id",
-      //       foreignField: "makeId",
-      //       as: "models",
-      //     },
-      //   },
-      // ]);
-
-      const totalCount = await makeModel.count();
+      const totalCount = await countryModel.count();
 
       const response = {
-        items: allMake,
+        items: allCountries,
         totalCount: totalCount,
       };
 
       return ResponseService.success(
         res,
-        "Make list found successfully",
+        "Countries list found successfully",
         response
       );
     });
@@ -70,36 +52,37 @@ module.exports.getAllMake = async (req, res) => {
   }
 };
 
-module.exports.addMake = async (req, res) => {
+module.exports.addCountry = async (req, res) => {
   try {
-    const { label, type, logo } = req.body;
+    const { name, flag, countryCode, currency, cities } = req.body;
 
     const validationError = checkRequiredFields({
-      label,
-      type,
-      logo,
+      name,
+      flag,
+      countryCode,
+      currency,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newMake = { label, type, logo };
-    const make = new makeModel(newMake);
+    const newCountry = { name, flag, countryCode, currency, cities };
+    const country = new countryModel(newCountry);
 
-    const isMakeExist = await makeModel.findOne({
-      label: label,
+    const isCountryExist = await countryModel.findOne({
+      name: name,
     });
 
-    if (isMakeExist) {
+    if (isCountryExist) {
       return ResponseService.failed(
         res,
-        "Make with label already exits",
+        "Country with name already exits",
         StatusCode.forbidden
       );
     }
 
-    const result = await make.save();
+    const result = await country.save();
 
-    return ResponseService.success(res, "Make added successfully", result);
+    return ResponseService.success(res, "Country added successfully", result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, error, 400);

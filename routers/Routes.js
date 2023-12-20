@@ -25,6 +25,10 @@ const {
   register,
   resetPassword,
 } = require("../user/controllers/authController");
+const {
+  getAllCountries,
+  addCountry,
+} = require("../admin/controllers/countryController");
 
 //auth
 router.route("/login").post(login);
@@ -42,10 +46,15 @@ router.route("/makeDetails/:id").get(getMakeDetails);
 router.route("/updateMake").post(updateMake);
 router.route("/deletemake").post(deleteMake);
 router.route("/addModel").post(addModel);
-router.route("/allModel").get(getAllModels);
+router.route("/allModel/:makeId").get(getAllModels);
 router.route("/modelDetails/:id").get(getModelDetails);
 router.route("/updateModel").post(updateModel);
 router.route("/deletemodel").post(deleteModel);
+router.route("/addCountry").post(addCountry);
+router.route("/allCountry").get(getAllCountries);
+router.route("/viewCountry/:id").get(getModelDetails);
+router.route("/updateCountry").post(updateModel);
+router.route("/deleteCountry").post(deleteModel);
 // router.route("/addUser").post(addUser);
 
 //common

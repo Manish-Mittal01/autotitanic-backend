@@ -45,7 +45,7 @@ module.exports.getModelDetails = async (req, res) => {
     if (!id)
       return ResponseService.failed(res, "Id is required", StatusCode.notFound);
 
-    const modelDetails = await allModels.find({ _id: id });
+    const modelDetails = await allModels.findOne({ _id: id });
 
     if (!modelDetails)
       return ResponseService.failed(
@@ -94,9 +94,8 @@ module.exports.updateModel = async (req, res) => {
       },
       {
         $set: {
-          lebel: label,
+          label: label,
           type: type,
-          makeId: makeId,
         },
       }
     );

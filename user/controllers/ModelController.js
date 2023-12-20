@@ -12,7 +12,7 @@ module.exports.getAllModels = async (req, res) => {
         StatusCode.notFound
       );
 
-    const allModel = await allModels.find({ brandId: makeId }, null, {
+    const allModel = await allModels.find({ makeId }, null, {
       sort: { label: 1 },
     });
 
