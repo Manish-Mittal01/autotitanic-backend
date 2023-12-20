@@ -28,7 +28,17 @@ const {
 const {
   getAllCountries,
   addCountry,
+  updateCountry,
+  getCountryDetails,
+  deleteCountry,
 } = require("../admin/controllers/countryController");
+const {
+  addCities,
+  getAllCities,
+  getCityDetails,
+  updateCity,
+  deleteCity,
+} = require("../admin/controllers/cityController");
 
 //auth
 router.route("/login").post(login);
@@ -52,9 +62,14 @@ router.route("/updateModel").post(updateModel);
 router.route("/deletemodel").post(deleteModel);
 router.route("/addCountry").post(addCountry);
 router.route("/allCountry").get(getAllCountries);
-router.route("/viewCountry/:id").get(getModelDetails);
-router.route("/updateCountry").post(updateModel);
-router.route("/deleteCountry").post(deleteModel);
+router.route("/viewCountry/:id").get(getCountryDetails);
+router.route("/updateCountry").post(updateCountry);
+router.route("/deleteCountry/:countryId").delete(deleteCountry);
+router.route("/addCity").post(addCities);
+router.route("/allCity").get(getAllCities);
+router.route("/viewCity/:id").get(getCityDetails);
+router.route("/updateCity").post(updateCity);
+router.route("/deleteCity/:cityId").delete(deleteCity);
 // router.route("/addUser").post(addUser);
 
 //common

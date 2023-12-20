@@ -1,8 +1,6 @@
 const { ResponseService } = require("../../common/responseService");
-const makeModel = require("../../Models/makeModel");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
-const allModels = require("../../Models/allModels");
 const countryModel = require("../../Models/countryModel");
 
 module.exports.getAllCountries = async (req, res) => {
@@ -20,7 +18,14 @@ module.exports.getAllCountries = async (req, res) => {
         .lean()
         .cursor();
     } else {
-      cursor = await countryModel.find({}).lean().cursor();
+      cursor = await countryModel
+        .find({}, null, {
+          sort: { name: 1 },
+          limit: limit,
+          skip: (Number(page) - 1) * limit,
+        })
+        .lean()
+        .cursor();
     }
 
     cursor.on("data", function (country) {
@@ -28,11 +33,6 @@ module.exports.getAllCountries = async (req, res) => {
     });
 
     cursor.on("end", async () => {
-      for (let country of allCountries) {
-        const models = await allModels.find({ makeId: country._id });
-        country.models = models;
-      }
-
       const totalCount = await countryModel.count();
 
       const response = {
@@ -54,7 +54,7 @@ module.exports.getAllCountries = async (req, res) => {
 
 module.exports.addCountry = async (req, res) => {
   try {
-    const { name, flag, countryCode, currency, cities } = req.body;
+    const { name, flag, countryCode, currency } = req.body;
 
     const validationError = checkRequiredFields({
       name,
@@ -65,7 +65,7 @@ module.exports.addCountry = async (req, res) => {
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newCountry = { name, flag, countryCode, currency, cities };
+    const newCountry = { name, flag, countryCode, currency };
     const country = new countryModel(newCountry);
 
     const isCountryExist = await countryModel.findOne({
@@ -89,23 +89,23 @@ module.exports.addCountry = async (req, res) => {
   }
 };
 
-module.exports.getMakeDetails = async (req, res) => {
+module.exports.getCountryDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const makeDetails = await makeModel.findOne({ _id: id });
+    const countryDetails = await countryModel.findOne({ _id: id });
 
-    if (!makeDetails)
+    if (!countryDetails)
       return ResponseService.failed(
         res,
-        "Invalid make id",
+        "Country not found",
         StatusCode.notFound
       );
 
     return ResponseService.success(
       res,
       "Make list found successfully",
-      makeDetails
+      countryDetails
     );
   } catch (error) {
     console.log("error", error);
@@ -113,64 +113,70 @@ module.exports.getMakeDetails = async (req, res) => {
   }
 };
 
-module.exports.updateMake = async (req, res) => {
+module.exports.updateCountry = async (req, res) => {
   try {
-    const { label, type, logo, makeId } = req.body;
+    const { name, flag, countryCode, currency, _id } = req.body;
 
     const validationError = checkRequiredFields({
-      label,
-      type,
-      logo,
-      makeId,
+      name,
+      flag,
+      countryCode,
+      currency,
+      _id,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const isMakeExist = await makeModel.findOne({
-      _id: makeId,
+    const isCountryExist = await countryModel.findOne({
+      _id: _id,
     });
 
-    if (!isMakeExist)
-      return ResponseService.failed(res, "Make not found", StatusCode.notFound);
-    const result = await makeModel.updateOne(
+    if (!isCountryExist)
+      return ResponseService.failed(
+        res,
+        "Country not found",
+        StatusCode.notFound
+      );
+
+    const result = await countryModel.updateOne(
       {
-        _id: makeId,
+        _id: _id,
       },
       {
-        $set: {
-          label: label,
-          type: type,
-          logo: logo,
-        },
+        $set: { name, flag, countryCode, currency },
       }
     );
 
-    return ResponseService.success(res, "Make updated successfully", result);
+    return ResponseService.success(res, "Country updated successfully", result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, error, 400);
   }
 };
 
-module.exports.deleteMake = async (req, res) => {
+module.exports.deleteCountry = async (req, res) => {
   try {
-    const { makeId } = req.body;
+    const { countryId } = req.params;
 
-    const validationError = checkRequiredFields({ makeId });
+    const validationError = checkRequiredFields({ countryId });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const isMakeExist = await makeModel.findOne({
-      _id: makeId,
+    const isCountryExist = await countryModel.findOne({
+      _id: countryId,
     });
 
-    if (!isMakeExist)
-      return ResponseService.failed(res, "Make not found", StatusCode.notFound);
-    const result = await makeModel.deleteOne({
-      _id: makeId,
+    if (!isCountryExist)
+      return ResponseService.failed(
+        res,
+        "Country not found",
+        StatusCode.notFound
+      );
+    const result = await countryModel.deleteOne({
+      _id: countryId,
     });
 
-    return ResponseService.success(res, "Make added successfully", result);
+    return ResponseService.success(res, "Country deleted successfully", result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, "Something wrong happend");

@@ -18,10 +18,6 @@ const countrySchema = Schema(
       type: String,
       required: true,
     },
-    cities: {
-      type: [String],
-      default: [],
-    },
   },
   { timestamps: true, versionKey: false }
 );
