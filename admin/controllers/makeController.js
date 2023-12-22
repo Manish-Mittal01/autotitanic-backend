@@ -22,9 +22,8 @@ module.exports.getAllMake = async (req, res) => {
       cursor = await makeModel
         .find({}, null, {
           sort: { createdAt: 1 },
-          // sort: { label: 1 },
-          // skip: (page - 1) * limit,
-          // limit: limit,
+          skip: (page - 1) * limit,
+          limit: limit,
         })
         .lean()
         .cursor();

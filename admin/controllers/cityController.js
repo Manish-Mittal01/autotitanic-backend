@@ -160,7 +160,7 @@ module.exports.deleteCity = async (req, res) => {
       _id: cityId,
     });
 
-    return ResponseService.sukccess(res, "City deleted successfully", result);
+    return ResponseService.success(res, "City deleted successfully", result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, "Something wrong happend");
