@@ -11,7 +11,7 @@ module.exports.getAllModel = async (req, res) => {
 
     allModel = await allModels
       .find({}, null, {
-        sort: { createdAt: 1 },
+        sort: { createdAt: -1 },
         skip: (page - 1) * limit,
         limit: limit,
       })

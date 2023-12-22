@@ -12,7 +12,7 @@ module.exports.getAllMake = async (req, res) => {
 
     allMake = await makeModel
       .find({}, null, {
-        sort: { createdAt: 1 },
+        sort: { createdAt: -1 },
         skip: (page - 1) * limit,
         limit: limit,
       })
