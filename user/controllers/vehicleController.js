@@ -89,19 +89,31 @@ module.exports.getAllvehicles = async (req, res) => {
 
 module.exports.getResultCount = async (req, res) => {
   try {
-    let { filters } = req.body;
+    let {
+      filters,
+      filters: { minPrice, maxPrice, country, make, model },
+    } = req.body;
 
-    let vehiclesCount = await vehiclesModel.count({ ...filters });
+    const validationError = checkRequiredFields({ filters });
+    if (validationError)
+      return ResponseService.failed(
+        res,
+        validationError,
+        StatusCode.badRequest
+      );
+
+    let vehiclesCount = await vehiclesModel.countDocuments({
+      country,
+      make,
+      model,
+      price: { $gte: parseInt(minPrice), $lte: parseInt(maxPrice) },
+    });
 
     const response = {
       totalCount: vehiclesCount,
     };
 
-    return ResponseService.success(
-      res,
-      "vehicles list found successfully",
-      response
-    );
+    return ResponseService.success(res, "Count successful", response);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happened");

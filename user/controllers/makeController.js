@@ -1,32 +1,32 @@
 const { ResponseService } = require("../../common/responseService");
-const { StatusCode } = require("../../common/Constants");
-const allModels = require("../../Models/allModels");
+const makeModel = require("../../Models/makeModel");
 const { checkRequiredFields } = require("../../common/utility");
+const { StatusCode } = require("../../common/Constants");
 
-module.exports.getModelList = async (req, res) => {
+module.exports.getMakeList = async (req, res) => {
   try {
-    const { makeId } = req.params;
+    const { type } = req.query;
 
-    const validationError = checkRequiredFields({ makeId });
+    const validationError = checkRequiredFields({ type });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const allModel = await allModels
-      .find({ make: makeId }, null, {
+    const allMake = await makeModel
+      .find({ type: type }, null, {
         sort: { label: 1 },
       })
       .lean();
 
-    const totalCount = await allModels.countDocuments({ make: makeId });
+    const totalCount = await makeModel.count();
 
     const response = {
-      items: allModel,
+      items: allMake,
       totalCount: totalCount,
     };
 
     return ResponseService.success(
       res,
-      "Model list found successfully",
+      "Make list found successfully",
       response
     );
   } catch (error) {

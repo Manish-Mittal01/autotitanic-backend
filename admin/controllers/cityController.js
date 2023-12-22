@@ -5,47 +5,30 @@ const cityModel = require("../../Models/cityModel");
 
 module.exports.getAllCities = async (req, res) => {
   try {
-    const { page, limit, countryId } = req.query;
+    const { page = 1, limit = 10 } = req.query;
 
     let allCities = [];
-    let cursor = {};
 
-    if (countryId) {
-      cursor = await cityModel
-        .find({ countryId }, null, {
-          sort: { name: 1 },
-        })
-        .lean()
-        .cursor();
-    } else {
-      cursor = await cityModel
-        .find({}, null, {
-          sort: { name: 1 },
-          limit: limit,
-          skip: (Number(page) - 1) * limit,
-        })
-        .lean()
-        .cursor();
-    }
+    allCities = await cityModel
+      .find({}, null, {
+        limit: limit,
+        skip: (Number(page) - 1) * limit,
+      })
+      .lean()
+      .populate("country");
 
-    cursor.on("data", function (city) {
-      allCities.push(city);
-    });
+    const totalCount = await cityModel.count();
 
-    cursor.on("end", async () => {
-      const totalCount = await cityModel.count();
+    const response = {
+      items: allCities,
+      totalCount: totalCount,
+    };
 
-      const response = {
-        items: allCities,
-        totalCount: totalCount,
-      };
-
-      return ResponseService.success(
-        res,
-        "Cities list found successfully",
-        response
-      );
-    });
+    return ResponseService.success(
+      res,
+      "Cities list found successfully",
+      response
+    );
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");
@@ -54,16 +37,16 @@ module.exports.getAllCities = async (req, res) => {
 
 module.exports.addCities = async (req, res) => {
   try {
-    const { name, countryId } = req.body;
+    const { name, country } = req.body;
 
     const validationError = checkRequiredFields({
       name,
-      countryId,
+      country,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newCity = { name, countryId };
+    const newCity = { name, country };
     const city = new cityModel(newCity);
 
     const isCityExist = await cityModel.findOne({

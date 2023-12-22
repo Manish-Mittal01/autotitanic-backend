@@ -7,45 +7,26 @@ module.exports.getAllCountries = async (req, res) => {
   try {
     const { page, limit } = req.query;
 
-    let allCountries = [];
-    let cursor = {};
+    let allCountries = await countryModel
+      .find({}, null, {
+        sort: { name: 1 },
+        limit: limit,
+        skip: (Number(page) - 1) * limit,
+      })
+      .lean();
 
-    if (!page) {
-      cursor = await countryModel
-        .find({}, null, {
-          sort: { name: 1 },
-        })
-        .lean()
-        .cursor();
-    } else {
-      cursor = await countryModel
-        .find({}, null, {
-          sort: { name: 1 },
-          limit: limit,
-          skip: (Number(page) - 1) * limit,
-        })
-        .lean()
-        .cursor();
-    }
+    const totalCount = await countryModel.count();
 
-    cursor.on("data", function (country) {
-      allCountries.push(country);
-    });
+    const response = {
+      items: allCountries,
+      totalCount: totalCount,
+    };
 
-    cursor.on("end", async () => {
-      const totalCount = await countryModel.count();
-
-      const response = {
-        items: allCountries,
-        totalCount: totalCount,
-      };
-
-      return ResponseService.success(
-        res,
-        "Countries list found successfully",
-        response
-      );
-    });
+    return ResponseService.success(
+      res,
+      "Countries list found successfully",
+      response
+    );
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");

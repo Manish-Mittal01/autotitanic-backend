@@ -2,9 +2,10 @@ const { Schema, model } = require("mongoose");
 
 const citySchema = Schema(
   {
-    countryId: {
-      type: String,
+    country: {
+      type: Schema.Types.ObjectId,
       required: true,
+      ref: "countries",
     },
     name: {
       type: String,

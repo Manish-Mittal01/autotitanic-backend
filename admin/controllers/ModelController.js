@@ -3,19 +3,53 @@ const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 const allModels = require("../../Models/allModels");
 
+module.exports.getAllModel = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+
+    let allModel = [];
+
+    allModel = await allModels
+      .find({}, null, {
+        sort: { createdAt: 1 },
+        skip: (page - 1) * limit,
+        limit: limit,
+      })
+      .lean()
+      .populate("make");
+
+    const totalCount = await allModels.count();
+
+    const response = {
+      items: allModel,
+      totalCount: totalCount,
+    };
+
+    return ResponseService.success(
+      res,
+      "Make list found successfully",
+      response
+    );
+  } catch (error) {
+    console.log("error", error);
+    return ResponseService.failed(res, "Something wrong happend");
+  }
+};
+
 module.exports.addModel = async (req, res) => {
   try {
-    const { label, type, makeId } = req.body;
+    const { label, type, make } = req.body;
+    console.log("label", label);
 
     const validationError = checkRequiredFields({
       label,
       type,
-      makeId,
+      make,
     });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newModel = { label, type, makeId };
+    const newModel = { label, type, make };
     const model = new allModels(newModel);
 
     const isModelExist = await allModels.findOne({

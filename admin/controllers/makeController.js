@@ -6,63 +6,30 @@ const allModels = require("../../Models/allModels");
 
 module.exports.getAllMake = async (req, res) => {
   try {
-    const { page = 1, limit = 10, type } = req.query;
+    const { page = 1, limit = 10 } = req.query;
 
     let allMake = [];
-    let cursor = {};
 
-    if (type) {
-      cursor = await makeModel
-        .find({ type: [type] }, null, {
-          sort: { label: 1 },
-        })
-        .lean()
-        .cursor();
-    } else if (page) {
-      cursor = await makeModel
-        .find({}, null, {
-          sort: { createdAt: 1 },
-          skip: (page - 1) * limit,
-          limit: limit,
-        })
-        .lean()
-        .cursor();
-    }
+    allMake = await makeModel
+      .find({}, null, {
+        sort: { createdAt: 1 },
+        skip: (page - 1) * limit,
+        limit: limit,
+      })
+      .lean();
 
-    cursor.on("data", function (make) {
-      allMake.push(make);
-    });
+    const totalCount = await makeModel.count();
 
-    cursor.on("end", async () => {
-      for (let make of allMake) {
-        const models = await allModels.find({ makeId: make._id });
-        make.models = models;
-      }
+    const response = {
+      items: allMake,
+      totalCount: totalCount,
+    };
 
-      // const m = await makeModel.aggregate([
-      //   {
-      //     $lookup: {
-      //       from: "allModels",
-      //       localField: "_id",
-      //       foreignField: "makeId",
-      //       as: "models",
-      //     },
-      //   },
-      // ]);
-
-      const totalCount = await makeModel.count();
-
-      const response = {
-        items: allMake,
-        totalCount: totalCount,
-      };
-
-      return ResponseService.success(
-        res,
-        "Make list found successfully",
-        response
-      );
-    });
+    return ResponseService.success(
+      res,
+      "Make list found successfully",
+      response
+    );
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");

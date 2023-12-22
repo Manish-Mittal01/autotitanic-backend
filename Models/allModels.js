@@ -6,9 +6,10 @@ const modelSchema = Schema(
       type: String,
       required: true,
     },
-    makeId: {
-      type: String,
+    make: {
+      type: Schema.Types.ObjectId,
       required: true,
+      ref: "makes",
     },
     type: {
       type: [String],
