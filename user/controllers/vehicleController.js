@@ -91,7 +91,7 @@ module.exports.getResultCount = async (req, res) => {
   try {
     let {
       filters,
-      filters: { minPrice = 0, maxPrice },
+      // filters: { minPrice = 0, maxPrice },
     } = req.body;
 
     console.log("req body", req.body);
