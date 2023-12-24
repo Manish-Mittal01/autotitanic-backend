@@ -91,7 +91,7 @@ module.exports.getResultCount = async (req, res) => {
   try {
     let {
       filters,
-      filters: { minPrice, maxPrice, country, make, model },
+      filters: { minPrice = 0, maxPrice },
     } = req.body;
 
     const validationError = checkRequiredFields({ filters });
@@ -102,10 +102,16 @@ module.exports.getResultCount = async (req, res) => {
         StatusCode.badRequest
       );
 
+    const newFilters = {};
+
+    ["country", "make", "model"].forEach((filter) => {
+      if (filters[filter]) {
+        newFilters[filter] = filters[filter];
+      }
+    });
+
     let vehiclesCount = await vehiclesModel.countDocuments({
-      country,
-      make,
-      model,
+      ...newFilters,
       price: { $gte: parseInt(minPrice), $lte: parseInt(maxPrice) },
     });
 

@@ -36,7 +36,7 @@ module.exports.getAllCountries = async (req, res) => {
 
 module.exports.getAllCities = async (req, res) => {
   try {
-    const { countryId } = req.query;
+    const { countryId } = req.params;
 
     const validationError = checkRequiredFields({ countryId });
     if (validationError)

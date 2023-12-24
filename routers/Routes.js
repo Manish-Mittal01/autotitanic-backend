@@ -59,7 +59,7 @@ router.route("/resetPassword").post(resetPassword);
 router.route("/allMake").get(getAllMake);
 router.route("/allModel/:makeId").get(getAllModel);
 router.route("/allCountry").get(getAllCountries);
-router.route("/allCities").get(getAllCities);
+router.route("/allCities/:countryId").get(getAllCities);
 router.route("/getResultCount").post(getResultCount);
 router.route("/allVehicles").post(getAllvehicles);
 router.route("/addVehicle").post(addVehicle);
