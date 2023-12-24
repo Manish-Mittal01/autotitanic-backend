@@ -3,13 +3,13 @@ const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 const countryModel = require("../../Models/countryModel");
 
-module.exports.getAllCountries = async (req, res) => {
+module.exports.getCountriesList = async (req, res) => {
   try {
     const { page, limit } = req.query;
 
     let allCountries = await countryModel
       .find({}, null, {
-        sort: { name: 1 },
+        sort: { createdAt: -1 },
         limit: limit,
         skip: (Number(page) - 1) * limit,
       })

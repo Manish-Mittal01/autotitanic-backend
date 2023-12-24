@@ -5,9 +5,8 @@ module.exports.Status = {
 
 module.exports.passwordMode = {
   newUser: "new user",
-  resetPassword: "reset password"
-}
-
+  resetPassword: "reset password",
+};
 
 module.exports.ReferralBonus = {
   level1: 0.1,
@@ -16,7 +15,6 @@ module.exports.ReferralBonus = {
 module.exports.constantReferralBonus = 500;
 
 module.exports.dailyBonus = 500;
-
 
 module.exports.StatusCode = {
   success: 200,
@@ -28,8 +26,8 @@ module.exports.StatusCode = {
   forbidden: 403,
   notFound: 404,
   timeout: 408,
+  srevrError: 500,
 };
-
 
 module.exports.TransactionType = {
   deposit: "deposit",

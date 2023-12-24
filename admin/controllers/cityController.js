@@ -3,7 +3,7 @@ const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 const cityModel = require("../../Models/cityModel");
 
-module.exports.getAllCities = async (req, res) => {
+module.exports.getCitiesList = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 

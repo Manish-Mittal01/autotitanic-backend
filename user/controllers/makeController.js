@@ -3,7 +3,7 @@ const makeModel = require("../../Models/makeModel");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 
-module.exports.getMakeList = async (req, res) => {
+module.exports.getAllMake = async (req, res) => {
   try {
     const { type } = req.query;
 

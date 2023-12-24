@@ -4,7 +4,7 @@ const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 const allModels = require("../../Models/allModels");
 
-module.exports.getAllMake = async (req, res) => {
+module.exports.getMakeList = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
