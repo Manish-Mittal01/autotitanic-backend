@@ -19,8 +19,14 @@ const vehicleSchema = Schema(
       type: String,
     },
     country: {
-      type: String,
+      type: Schema.Types.ObjectId,
       required: true,
+      ref: "countries",
+    },
+    city: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: "cities",
     },
     currency: {
       type: String,
@@ -58,14 +64,16 @@ const vehicleSchema = Schema(
       type: String,
     },
     make: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "makes",
     },
     media: {
       type: [String],
       required: true,
     },
     model: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "models",
     },
     mileage: {
       type: String,
@@ -74,17 +82,12 @@ const vehicleSchema = Schema(
       type: String,
       required: true,
     },
-
     rating: {
       type: String,
     },
     reviews: {
       type: [{ type: String }],
       default: [],
-    },
-    state: {
-      type: String,
-      required: true,
     },
     seat: {
       type: String,

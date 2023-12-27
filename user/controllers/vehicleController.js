@@ -8,7 +8,7 @@ module.exports.addVehicle = async (req, res) => {
     const {
       condition,
       country,
-      state,
+      city,
       title,
       description,
       media,
@@ -20,7 +20,7 @@ module.exports.addVehicle = async (req, res) => {
     const validationError = checkRequiredFields({
       condition,
       country,
-      state,
+      city,
       title,
       description,
       media,
@@ -91,7 +91,7 @@ module.exports.getResultCount = async (req, res) => {
   try {
     let {
       filters,
-      // filters: { minPrice = 0, maxPrice },
+      filters: { minPrice = 0, maxPrice },
     } = req.body;
 
     console.log("req body", req.body);
