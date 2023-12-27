@@ -5,10 +5,15 @@ const countryModel = require("../../Models/countryModel");
 
 module.exports.getCountriesList = async (req, res) => {
   try {
-    const { page, limit } = req.query;
+    const { page, limit, search } = req.body;
+
+    const queryObj = {};
+    if (search) {
+      queryObj.name = { $regex: search, $options: "i" };
+    }
 
     let allCountries = await countryModel
-      .find({}, null, {
+      .find({ ...queryObj }, null, {
         sort: { createdAt: -1 },
         limit: limit,
         skip: (Number(page) - 1) * limit,

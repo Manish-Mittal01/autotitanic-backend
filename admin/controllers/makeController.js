@@ -6,12 +6,18 @@ const allModels = require("../../Models/allModels");
 
 module.exports.getMakeList = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, category, search } = req.body;
 
-    let allMake = [];
+    const queryObj = {};
+    if (search) {
+      queryObj.label = { $regex: search, $options: "i" };
+    }
+    if (category) {
+      queryObj.type = category;
+    }
 
-    allMake = await makeModel
-      .find({}, null, {
+    const allMake = await makeModel
+      .find({ ...queryObj }, null, {
         sort: { createdAt: -1 },
         skip: (page - 1) * limit,
         limit: limit,

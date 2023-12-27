@@ -66,28 +66,28 @@ router.route("/addVehicle").post(addVehicle);
 
 //admin
 //make
-router.route("/makeList").get(getMakeList);
+router.route("/makeList").post(getMakeList);
 router.route("/addMake").post(addMake);
 router.route("/makeDetails/:id").get(getMakeDetails);
 router.route("/updateMake").post(updateMake);
 router.route("/deletemake").post(deleteMake);
 
 //model
-router.route("/modelList").get(getModelList);
+router.route("/modelList").post(getModelList);
 router.route("/addModel").post(addModel);
 router.route("/modelDetails/:id").get(getModelDetails);
 router.route("/updateModel").post(updateModel);
 router.route("/deletemodel").post(deleteModel);
 
 //country
-router.route("/countryList").get(getCountriesList);
+router.route("/countryList").post(getCountriesList);
 router.route("/addCountry").post(addCountry);
 router.route("/viewCountry/:id").get(getCountryDetails);
 router.route("/updateCountry").post(updateCountry);
 router.route("/deleteCountry/:countryId").delete(deleteCountry);
 
 //city
-router.route("/cityList").get(getCitiesList);
+router.route("/cityList").post(getCitiesList);
 router.route("/addCity").post(addCities);
 router.route("/viewCity/:id").get(getCityDetails);
 router.route("/updateCity").post(updateCity);

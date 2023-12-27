@@ -95,6 +95,7 @@ module.exports.getResultCount = async (req, res) => {
     } = req.body;
 
     console.log("req body", req.body);
+    console.log("req filters", req.body?.filters);
 
     const validationError = checkRequiredFields({ filters });
     if (validationError)

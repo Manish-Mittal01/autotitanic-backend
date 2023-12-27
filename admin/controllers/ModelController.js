@@ -5,12 +5,18 @@ const allModels = require("../../Models/allModels");
 
 module.exports.getModelList = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, category, search } = req.body;
 
-    let allModel = [];
+    const queryObj = {};
+    if (search) {
+      queryObj.label = { $regex: search, $options: "i" };
+    }
+    if (category) {
+      queryObj.type = category;
+    }
 
-    allModel = await allModels
-      .find({}, null, {
+    const allModel = await allModels
+      .find({ ...queryObj }, null, {
         sort: { createdAt: -1 },
         skip: (page - 1) * limit,
         limit: limit,

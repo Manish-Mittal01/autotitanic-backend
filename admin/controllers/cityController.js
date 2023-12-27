@@ -5,12 +5,15 @@ const cityModel = require("../../Models/cityModel");
 
 module.exports.getCitiesList = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10, search } = req.body;
 
-    let allCities = [];
+    let queryObj = {};
+    if (search) {
+      queryObj.name = { $regex: search, $options: "i" };
+    }
 
-    allCities = await cityModel
-      .find({}, null, {
+    const allCities = await cityModel
+      .find({ ...queryObj }, null, {
         limit: limit,
         skip: (Number(page) - 1) * limit,
       })
