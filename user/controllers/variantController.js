@@ -5,19 +5,19 @@ const variantModel = require("../../Models/variantModel");
 
 module.exports.getAllVariant = async (req, res) => {
   try {
-    const { modelId } = req.query;
+    const { modelId } = req.params;
 
-    const validationError = checkRequiredFields({ type });
+    const validationError = checkRequiredFields({ modelId });
     if (validationError)
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const allVariant = await variantModel
-      .find({ modelId }, null, {
+      .find({ model: modelId }, null, {
         sort: { label: 1 },
       })
       .lean();
 
-    const totalCount = await variantModel.count();
+    const totalCount = await variantModel.countDocuments({ model: modelId });
 
     const response = {
       items: allVariant,

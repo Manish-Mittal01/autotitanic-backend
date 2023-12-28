@@ -15,14 +15,31 @@ module.exports.getModelList = async (req, res) => {
       queryObj.type = category;
     }
 
-    const allModel = await allModels
-      .find({ ...queryObj }, null, {
-        sort: { createdAt: -1 },
-        skip: (page - 1) * limit,
-        limit: limit,
-      })
-      .lean()
-      .populate("make");
+    const allModel = await allModels.aggregate([
+      {
+        $lookup: {
+          from: "makes",
+          localField: "make",
+          foreignField: "_id",
+          as: "make",
+        },
+      },
+      { $unwind: "$make" },
+      {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $skip: (page - 1) * limit,
+      },
+      {
+        $limit: limit,
+      },
+    ]);
 
     const totalCount = await allModels.count();
 

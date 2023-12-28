@@ -94,9 +94,6 @@ module.exports.getResultCount = async (req, res) => {
       filters: { minPrice = 0, maxPrice },
     } = req.body;
 
-    console.log("req body", req.body);
-    console.log("req filters", req.body?.filters);
-
     const validationError = checkRequiredFields({ filters });
     if (validationError)
       return ResponseService.failed(

@@ -56,6 +56,7 @@ const {
   updateVariant,
   deleteVariant,
 } = require("../admin/controllers/variantController");
+const { getAllVariant } = require("../user/controllers/variantController");
 
 //auth
 router.route("/login").post(login);
@@ -65,6 +66,7 @@ router.route("/resetPassword").post(resetPassword);
 //user
 router.route("/allMake").get(getAllMake);
 router.route("/allModel/:makeId").get(getAllModel);
+router.route("/allVariant/:modelId").get(getAllVariant);
 router.route("/allCountry").get(getAllCountries);
 router.route("/allCities/:countryId").get(getAllCities);
 router.route("/getResultCount").post(getResultCount);
