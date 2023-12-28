@@ -49,6 +49,13 @@ const {
   getAllCountries,
   getAllCities,
 } = require("../user/controllers/locationController");
+const {
+  getVariantList,
+  addVariant,
+  getVariantDetails,
+  updateVariant,
+  deleteVariant,
+} = require("../admin/controllers/variantController");
 
 //auth
 router.route("/login").post(login);
@@ -78,6 +85,13 @@ router.route("/addModel").post(addModel);
 router.route("/modelDetails/:id").get(getModelDetails);
 router.route("/updateModel").post(updateModel);
 router.route("/deletemodel").post(deleteModel);
+
+//variant
+router.route("/variantList").post(getVariantList);
+router.route("/addVariant").post(addVariant);
+router.route("/VariantDetails/:id").get(getVariantDetails);
+router.route("/updateVariant").post(updateVariant);
+router.route("/deleteVariant").post(deleteVariant);
 
 //country
 router.route("/countryList").post(getCountriesList);

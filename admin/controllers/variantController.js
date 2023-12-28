@@ -1,27 +1,52 @@
 const { ResponseService } = require("../../common/responseService");
-const makeModel = require("../../Models/makeModel");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 const variantModel = require("../../Models/variantModel");
 
 module.exports.getVariantList = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search, model } = req.body;
+    const { page = 1, limit = 10, search } = req.body;
 
     const queryObj = {};
     if (search) {
       queryObj.label = { $regex: search, $options: "i" };
     }
 
-    const allvariant = await variantModel
-      .find({ ...queryObj }, null, {
-        sort: { createdAt: -1 },
-        skip: (page - 1) * limit,
-        limit: limit,
-      })
-      .lean();
+    // const allvariant = await variantModel
+    //   .find({ ...queryObj }, null, {
+    //     sort: { createdAt: -1 },
+    //     skip: (page - 1) * limit,
+    //     limit: limit,
+    //   })
+    //   .lean();
 
-    const totalCount = await variantModel.count();
+    const allvariant = await variantModel.aggregate([
+      {
+        $lookup: {
+          from: "models",
+          localField: "model",
+          foreignField: "_id",
+          as: "model",
+        },
+      },
+      { $unwind: "$model" },
+      {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $skip: (page - 1) * limit,
+      },
+      {
+        $limit: limit,
+      },
+    ]);
+
+    const totalCount = await variantModel.countDocuments();
 
     const response = {
       items: allvariant,
