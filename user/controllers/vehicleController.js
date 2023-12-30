@@ -34,9 +34,7 @@ module.exports.addVehicle = async (req, res) => {
 
     const newVehicle = { ...req.body };
     const vehicle = new vehiclesModel(newVehicle);
-
-    let result = {};
-    result = await vehicle.save();
+    const result = await vehicle.save();
 
     return ResponseService.success(
       res,
@@ -53,6 +51,8 @@ module.exports.getAllvehicles = async (req, res) => {
   try {
     let { filters, paginationDetails, sort } = req.body;
     paginationDetails = paginationDetails || { page: 1, limit: 25 };
+
+    console.log("filters", filters);
 
     const extraFilters = [
       "minPrice",
@@ -81,13 +81,6 @@ module.exports.getAllvehicles = async (req, res) => {
         queryObj[filter] = { $regex: searchValue, $options: "i" };
       }
     });
-
-    // ["price", "year", "mileage"].forEach((filter) => {
-    //   queryObj[filter] = {
-    //     $gte: parseInt(filters.minPrice) || 0,
-    //     $lte: parseInt(filters.maxPrice || 2147483647),
-    //   };
-    // });
 
     queryObj.price = {
       $gte: parseInt(filters.minPrice) || 0,
@@ -209,6 +202,8 @@ module.exports.getAllvehicles = async (req, res) => {
       ...countFilters,
     });
 
+    console.log("allVehicles", allVehicles);
+
     const response = {
       items: allVehicles,
       totalCount: totalCount,
@@ -220,7 +215,7 @@ module.exports.getAllvehicles = async (req, res) => {
       response
     );
   } catch (error) {
-    console.log("error", error);
+    console.log("error in vehicle list", error);
     return ResponseService.failed(res, "Something wrong happened");
   }
 };
@@ -250,7 +245,10 @@ module.exports.getResultCount = async (req, res) => {
 
     let vehiclesCount = await vehiclesModel.countDocuments({
       ...newFilters,
-      price: { $gte: parseInt(minPrice), $lte: parseInt(maxPrice) },
+      price: {
+        $gte: parseInt(minPrice || 0),
+        $lte: parseInt(maxPrice || 2147483647),
+      },
     });
 
     const response = {
