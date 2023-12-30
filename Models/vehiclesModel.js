@@ -76,10 +76,10 @@ const vehicleSchema = Schema(
       ref: "models",
     },
     mileage: {
-      type: String,
+      type: Number,
     },
     price: {
-      type: String,
+      type: Number,
       required: true,
     },
     rating: {
@@ -110,7 +110,7 @@ const vehicleSchema = Schema(
       ref: "variants",
     },
     year: {
-      type: String,
+      type: Number,
     },
   },
   { versionKey: false, timestamps: true }

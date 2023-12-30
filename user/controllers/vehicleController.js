@@ -1,3 +1,4 @@
+const { Types } = require("mongoose");
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
@@ -51,9 +52,7 @@ module.exports.addVehicle = async (req, res) => {
 module.exports.getAllvehicles = async (req, res) => {
   try {
     let { filters, paginationDetails, sort } = req.body;
-    paginationDetails = paginationDetails
-      ? paginationDetails
-      : { page: 1, limit: 25 };
+    paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
     const extraFilters = [
       "minPrice",
@@ -66,31 +65,42 @@ module.exports.getAllvehicles = async (req, res) => {
 
     const idFilters = ["make", "model", "variant", "city", "country"];
 
+    const filterById = (filter) => {
+      const myFilter = filter ? { _id: Types.ObjectId(filter) } : {};
+      return myFilter;
+    };
+
     const queryObj = {};
     Object.keys(filters).forEach((filter) => {
       const searchValue = filters[filter];
-      if (searchValue && !extraFilters.includes(filter)) {
-        if (!idFilters.includes(filter)) {
-          queryObj[filter] = { $regex: searchValue, $options: "i" };
-        }
-        // else {
-        //   queryObj[filter] = searchValue;
-        // }
+      if (
+        searchValue &&
+        !extraFilters.includes(filter) &&
+        !idFilters.includes(filter)
+      ) {
+        queryObj[filter] = { $regex: searchValue, $options: "i" };
       }
     });
 
-    // queryObj.price = {
-    //   $gte: parseInt(filters.minPrice || 0),
-    //   $lte: parseInt(filters.maxPrice),
-    // };
-    // queryObj.year = {
-    //   $gte: parseInt(filters.minYear || 2000),
-    //   $lte: parseInt(filters.maxYear),
-    // };
-    // queryObj.mileage = {
-    //   $gte: parseInt(filters.minMileage || 0),
-    //   $lte: parseInt(filters.maxMileage),
-    // };
+    // ["price", "year", "mileage"].forEach((filter) => {
+    //   queryObj[filter] = {
+    //     $gte: parseInt(filters.minPrice) || 0,
+    //     $lte: parseInt(filters.maxPrice || 2147483647),
+    //   };
+    // });
+
+    queryObj.price = {
+      $gte: parseInt(filters.minPrice) || 0,
+      $lte: parseInt(filters.maxPrice || 2147483647),
+    };
+    queryObj.year = {
+      $gte: parseInt(filters.minYear || 2000),
+      $lte: parseInt(filters.maxYear || new Date().getFullYear()),
+    };
+    queryObj.mileage = {
+      $gte: parseInt(filters.minMileage || 0),
+      $lte: parseInt(filters.maxMileage || 100),
+    };
     console.log("queryObj", queryObj);
 
     let allVehicles = [];
@@ -107,6 +117,11 @@ module.exports.getAllvehicles = async (req, res) => {
             from: "countries",
             localField: "country",
             foreignField: "_id",
+            pipeline: [
+              {
+                $match: filterById(filters.country),
+              },
+            ],
             as: "country",
           },
         },
@@ -116,6 +131,11 @@ module.exports.getAllvehicles = async (req, res) => {
             from: "cities",
             localField: "city",
             foreignField: "_id",
+            pipeline: [
+              {
+                $match: filterById(filters.city),
+              },
+            ],
             as: "city",
           },
         },
@@ -125,13 +145,11 @@ module.exports.getAllvehicles = async (req, res) => {
             from: "makes",
             localField: "make",
             foreignField: "_id",
-            // pipeline: [
-            //   {
-            //     $match: {
-            //       _id: filters.make,
-            //     },
-            //   },
-            // ],
+            pipeline: [
+              {
+                $match: filterById(filters.make),
+              },
+            ],
             as: "make",
           },
         },
@@ -141,6 +159,11 @@ module.exports.getAllvehicles = async (req, res) => {
             from: "models",
             localField: "model",
             foreignField: "_id",
+            pipeline: [
+              {
+                $match: filterById(filters.model),
+              },
+            ],
             as: "model",
           },
         },
@@ -150,25 +173,41 @@ module.exports.getAllvehicles = async (req, res) => {
             from: "variants",
             localField: "variant",
             foreignField: "_id",
+            pipeline: [
+              {
+                $match: filterById(filters.variant),
+              },
+            ],
             as: "variant",
           },
         },
         // { $unwind: "$variant" },
-        {
-          $match: {
-            ...queryObj,
-          },
-        },
+
         {
           $skip: (Number(paginationDetails.page) - 1) * paginationDetails.limit,
         },
         {
           $limit: paginationDetails.limit,
         },
+        {
+          $match: {
+            ...queryObj,
+          },
+        },
       ]);
     }
 
-    const totalCount = await vehiclesModel.countDocuments({ ...queryObj });
+    const countFilters = {};
+    idFilters.forEach((filter) => {
+      if (filters[filter]) {
+        countFilters[filter] = filters[filter];
+      }
+    });
+
+    const totalCount = await vehiclesModel.countDocuments({
+      ...queryObj,
+      ...countFilters,
+    });
 
     const response = {
       items: allVehicles,
