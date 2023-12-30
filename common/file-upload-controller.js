@@ -1,4 +1,5 @@
 const { initializeApp } = require("firebase/app");
+const SharpMulter = require("sharp-multer");
 const { firebaseConfig } = require("../firebaseConfig");
 const {
   getStorage,
@@ -15,6 +16,14 @@ const makeModel = require("../Models/makeModel");
 
 const firebaseApp = initializeApp(firebaseConfig);
 const storage = getStorage(firebaseApp);
+
+// const newStorage = SharpMulter({
+//   destination: storage,
+//   imageOptions: {
+//     fileFormat: "jpg",
+//     quality: 80,
+//   },
+// });
 
 module.exports.upload = multer({ storage: multer.memoryStorage() });
 

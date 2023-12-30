@@ -105,6 +105,10 @@ const vehicleSchema = Schema(
       type: String,
       // required: true,
     },
+    variant: {
+      type: Schema.Types.ObjectId,
+      ref: "variants",
+    },
     year: {
       type: String,
     },

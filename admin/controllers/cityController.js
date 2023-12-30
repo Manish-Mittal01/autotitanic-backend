@@ -12,13 +12,39 @@ module.exports.getCitiesList = async (req, res) => {
       queryObj.name = { $regex: search, $options: "i" };
     }
 
-    const allCities = await cityModel
-      .find({ ...queryObj }, null, {
-        limit: limit,
-        skip: (Number(page) - 1) * limit,
-      })
-      .lean()
-      .populate("country");
+    // const allCities = await cityModel
+    //   .find({ ...queryObj }, null, {
+    //     limit: limit,
+    //     skip: (Number(page) - 1) * limit,
+    //   })
+    //   .lean()
+    //   .populate("country");
+
+    const allCities = await cityModel.aggregate([
+      {
+        $lookup: {
+          from: "countries",
+          localField: "country",
+          foreignField: "_id",
+          as: "country",
+        },
+      },
+      { $unwind: "$country" },
+      {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
+        $sort: { createdAt: -1 },
+      },
+      {
+        $skip: (Number(page) - 1) * limit,
+      },
+      {
+        $limit: limit,
+      },
+    ]);
 
     const totalCount = await cityModel.count();
 
