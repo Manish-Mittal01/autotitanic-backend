@@ -133,7 +133,7 @@ module.exports.getVariantDetails = async (req, res) => {
 
 module.exports.updateVariant = async (req, res) => {
   try {
-    const { label, id } = req.body;
+    const { label, _id } = req.body;
 
     const validationError = checkRequiredFields({
       label,
@@ -142,7 +142,7 @@ module.exports.updateVariant = async (req, res) => {
       return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isVariantExist = await variantModel.findOne({
-      _id: id,
+      _id: _id,
     });
 
     if (!isVariantExist)
@@ -153,7 +153,7 @@ module.exports.updateVariant = async (req, res) => {
       );
     const result = await variantModel.updateOne(
       {
-        _id: id,
+        _id: _id,
       },
       {
         $set: {

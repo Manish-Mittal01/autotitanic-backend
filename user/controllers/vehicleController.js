@@ -49,7 +49,7 @@ module.exports.addVehicle = async (req, res) => {
 
 module.exports.getAllvehicles = async (req, res) => {
   try {
-    let { filters, paginationDetails, sort } = req.body;
+    let { filters = {}, paginationDetails, sort } = req.body;
     paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
     console.log("filters", filters);

@@ -1,3 +1,4 @@
+const { Types } = require("mongoose");
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
@@ -20,12 +21,22 @@ module.exports.getCitiesList = async (req, res) => {
     //   .lean()
     //   .populate("country");
 
+    const pipelineFilter = (filter) => {
+      const myFilter = filter ? { name: filter } : {};
+      return myFilter;
+    };
+
     const allCities = await cityModel.aggregate([
       {
         $lookup: {
           from: "countries",
           localField: "country",
           foreignField: "_id",
+          // pipeline: [
+          //   {
+          //     $match: pipelineFilter(search),
+          //   },
+          // ],
           as: "country",
         },
       },

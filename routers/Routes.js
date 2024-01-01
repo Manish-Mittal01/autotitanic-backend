@@ -1,11 +1,7 @@
 const router = require("express").Router();
 const { addUser } = require("../user/controllers/userController");
 const { upload, uploadFiles } = require("../common/file-upload-controller");
-const {
-  login,
-  register,
-  resetPassword,
-} = require("../user/controllers/authController");
+const { login, register, resetPassword } = require("../auth/authController");
 
 //admin import
 const {
