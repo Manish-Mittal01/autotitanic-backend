@@ -36,7 +36,7 @@ module.exports.getVariantList = async (req, res) => {
         },
       },
       {
-        $sort: { createdAt: -1 },
+        $sort: { label: 1 },
       },
       {
         $skip: (page - 1) * limit,

@@ -47,7 +47,7 @@ module.exports.getCitiesList = async (req, res) => {
         },
       },
       {
-        $sort: { createdAt: -1 },
+        $sort: { name: 1 },
       },
       {
         $skip: (Number(page) - 1) * limit,

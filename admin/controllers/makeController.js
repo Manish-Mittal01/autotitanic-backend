@@ -18,7 +18,7 @@ module.exports.getMakeList = async (req, res) => {
 
     const allMake = await makeModel
       .find({ ...queryObj }, null, {
-        sort: { createdAt: -1 },
+        sort: { label: 1 },
         skip: (page - 1) * limit,
         limit: limit,
       })
