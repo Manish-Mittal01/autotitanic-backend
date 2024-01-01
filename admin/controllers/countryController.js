@@ -14,7 +14,7 @@ module.exports.getCountriesList = async (req, res) => {
 
     let allCountries = await countryModel
       .find({ ...queryObj }, null, {
-        sort: { createdAt: -1 },
+        sort: { name: 1 },
         limit: limit,
         skip: (Number(page) - 1) * limit,
       })
