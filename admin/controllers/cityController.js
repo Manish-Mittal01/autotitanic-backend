@@ -1,4 +1,3 @@
-const { Types } = require("mongoose");
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
@@ -10,21 +9,15 @@ module.exports.getCitiesList = async (req, res) => {
 
     let queryObj = {};
     if (search) {
-      queryObj.name = { $regex: search, $options: "i" };
+      queryObj["$or"] = [
+        {
+          "country.name": { $regex: search || "", $options: "i" },
+        },
+        {
+          name: { $regex: search || "", $options: "i" },
+        },
+      ];
     }
-
-    // const allCities = await cityModel
-    //   .find({ ...queryObj }, null, {
-    //     limit: limit,
-    //     skip: (Number(page) - 1) * limit,
-    //   })
-    //   .lean()
-    //   .populate("country");
-
-    const pipelineFilter = (filter) => {
-      const myFilter = filter ? { name: filter } : {};
-      return myFilter;
-    };
 
     const allCities = await cityModel.aggregate([
       {
@@ -32,15 +25,16 @@ module.exports.getCitiesList = async (req, res) => {
           from: "countries",
           localField: "country",
           foreignField: "_id",
-          // pipeline: [
-          //   {
-          //     $match: pipelineFilter(search),
-          //   },
-          // ],
           as: "country",
         },
       },
-      { $unwind: "$country" },
+      {
+        $unwind: {
+          path: "$country",
+          includeArrayIndex: "0",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       {
         $match: {
           ...queryObj,
@@ -57,7 +51,7 @@ module.exports.getCitiesList = async (req, res) => {
       },
     ]);
 
-    const totalCount = await cityModel.count();
+    const totalCount = allCities.length;
 
     const response = {
       items: allCities,
