@@ -53,6 +53,7 @@ const {
   deleteVariant,
 } = require("../admin/controllers/variantController");
 const { getAllVariant } = require("../user/controllers/variantController");
+const { updateContentPage, addContentPage, getContentPage, getContentPageList } = require("../admin/controllers/contentPagesController");
 
 //auth
 router.route("/login").post(login);
@@ -104,9 +105,15 @@ router.route("/addCity").post(addCities);
 router.route("/viewCity/:id").get(getCityDetails);
 router.route("/updateCity").post(updateCity);
 router.route("/deleteCity/:cityId").delete(deleteCity);
-// router.route("/addUser").post(addUser);
+
+//content-page
+router.route("/updateContentPage").post(updateContentPage);
+router.route("/addContentPage").post(addContentPage);
+
 
 //common
 router.route("/uploadFiles").post(upload.array("images"), uploadFiles);
+router.route("/getContentPage/:pageId").get(getContentPage);
+router.route("/getContentPageList").get(getContentPageList);
 
 module.exports = router;
