@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { addUser } = require("../user/controllers/userController");
 const { upload, uploadFiles } = require("../common/file-upload-controller");
-const { login, register, resetPassword } = require("../auth/authController");
+const { login, register, sendOtp } = require("../auth/authController");
 
 //admin import
 const {
@@ -53,12 +53,19 @@ const {
   deleteVariant,
 } = require("../admin/controllers/variantController");
 const { getAllVariant } = require("../user/controllers/variantController");
-const { updateContentPage, addContentPage, getContentPage, getContentPageList } = require("../admin/controllers/contentPagesController");
+const {
+  updateContentPage,
+  addContentPage,
+  getContentPage,
+  getContentPageList,
+} = require("../admin/controllers/contentPagesController");
+const { sendMail } = require("../common/firebaseMailer");
 
 //auth
 router.route("/login").post(login);
 router.route("/register").post(register);
-router.route("/resetPassword").post(resetPassword);
+router.route("/sendOtp").post(sendOtp);
+// router.route("/sendOtp").post(sendMail);
 
 //user
 router.route("/allMake").get(getAllMake);
@@ -109,7 +116,6 @@ router.route("/deleteCity/:cityId").delete(deleteCity);
 //content-page
 router.route("/updateContentPage").post(updateContentPage);
 router.route("/addContentPage").post(addContentPage);
-
 
 //common
 router.route("/uploadFiles").post(upload.array("images"), uploadFiles);

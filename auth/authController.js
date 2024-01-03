@@ -1,10 +1,27 @@
 const UserModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+const otpGenerator = require("otp-generator");
+const functions = require("firebase-functions");
+const nodemailer = require("nodemailer");
 const { StatusCode } = require("../common/Constants");
 const { ResponseService } = require("../common/responseService");
 const { checkRequiredFields } = require("../common/utility");
-const { success } = require("../common/Constants").Status;
+const otpModel = require("../Models/otpModel");
+const cors = require("cors")({ origin: true });
+
+/**
+ * Here we're using Gmail to send
+ */
+let transporter = nodemailer.createTransport({
+  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "devmanishmittal@gmail.com",
+    pass: "kzqz wwku cyzp zjjq",
+  },
+});
 
 module.exports.register = async (req, res) => {
   try {
@@ -116,27 +133,105 @@ module.exports.login = async (req, res) => {
   }
 };
 
-module.exports.resetPassword = async (req, res) => {
+module.exports.sendOtp = functions.https.onRequest((req, res) => {
   try {
-    const { email } = req.body;
+    cors(req, res, async () => {
+      const { email } = req.body;
 
-    const validationError = checkRequiredFields({
-      email,
+      const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+      let isValidEmail = emailRegex.test(email);
+      if (!email || !isValidEmail)
+        return ResponseService.failed(
+          res,
+          "Invalid email",
+          StatusCode.forbidden
+        );
+
+      const isUserExist = UserModel.findOne(email);
+      if (!isUserExist)
+        return ResponseService.failed(
+          res,
+          "user does not exit",
+          StatusCode.notFound
+        );
+
+      const OTP = otpGenerator.generate(6, {
+        digits: true,
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+      });
+
+      const otp = new otpModel({ email: email, otp: OTP });
+      const salt = await bcrypt.genSalt(10);
+      otp.otp = await bcrypt.hash(otp.otp, salt);
+      const result = await otp.save();
+
+      const mailOptions = {
+        from: "Manish Mittal <devmanishmittal@gmail.com>", // Something like: Jane Doe <janedoe@gmail.com>
+        to: email,
+        // to: "devmanishmittal@gmail.com",
+        subject: "Reset Password", // email subject
+        html: `<p style="font-size: 16px;">Your Otp to reset password on autotitanic is ${OTP}. It is valid for only 5 minutes</p>
+                    <br />
+                `, // email content in HTML
+      };
+
+      // returning result
+      return transporter.sendMail(mailOptions, (erro, info) => {
+        if (erro) {
+          return ResponseService.failed(
+            res,
+            erro.toString(),
+            StatusCode.badRequest
+          );
+        }
+
+        return ResponseService.success(res, "Otp sent to your mail", result);
+      });
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
-
-    const userExist = UserModel.findOne({ email });
-    if (!userExist)
-      return ResponseService.failed(
-        res,
-        "Email not registered",
-        StatusCode.notFound
-      );
-
-    return ResponseService.success(res, "otp sent to your mail", result);
   } catch (error) {
     console.log("error", error?.message);
-    return ResponseService.failed(res, error.message || error);
+    return ResponseService.failed(
+      res,
+      "Something wrong happend",
+      StatusCode.srevrError
+    );
+  }
+});
+
+module.exports.resetPassword = async (req, res) => {
+  try {
+    const { email, otp, password } = req.body;
+
+    const otpHolder = await otpModel.find({ email }).lean();
+    if (otpHolder.length === 0)
+      return ResponseService.failed(res, "Otp expired", StatusCode.badRequest);
+
+    const rightOtpFind = otpHolder.pop();
+    const validOtp = await bcrypt.compare(otp, rightOtpFind.otp);
+    if (!validOtp)
+      return ResponseService.failed(res, "Invalid Otp", StatusCode.badRequest);
+
+    const salt = await bcrypt.genSalt(10);
+    let newPassword = await bcrypt.hash(password, salt);
+    result = await UserModel.updateOne(
+      { email: email },
+      { password: newPassword }
+    );
+    result = {};
+
+    const otpDelete = await otpModel.deleteMany({
+      email: rightOtpFind.email,
+    });
+
+    ResponseService.success(res, "Password updated!!");
+  } catch (error) {
+    console.log("error", error);
+    ResponseService.failed(
+      res,
+      "Something wrong happend",
+      StatusCode.srevrError
+    );
   }
 };

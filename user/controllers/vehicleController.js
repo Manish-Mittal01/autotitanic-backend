@@ -52,8 +52,6 @@ module.exports.getAllvehicles = async (req, res) => {
     let { filters = {}, paginationDetails, sort } = req.body;
     paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
-    console.log("filters", filters);
-
     const extraFilters = [
       "minPrice",
       "maxPrice",

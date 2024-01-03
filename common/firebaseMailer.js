@@ -2,7 +2,6 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const nodemailer = require("nodemailer");
 const cors = require("cors")({ origin: true });
-admin.initializeApp();
 
 /**
  * Here we're using Gmail to send
@@ -13,8 +12,9 @@ let transporter = nodemailer.createTransport({
   port: 465,
   secure: true,
   auth: {
-    user: "manish.suffescom@gmail.com",
-    pass: "lxye bvte ufac hxdv",
+    user: "devmanishmittal@gmail.com",
+    pass: "kzqz wwku cyzp zjjq",
+    // pass: "kzqz wwku cyzp zjjq",
   },
 });
 
@@ -24,8 +24,8 @@ module.exports.sendMail = functions.https.onRequest((req, res) => {
     const dest = req.query.dest;
 
     const mailOptions = {
-      from: "Manish Mittal <manish.suffescom@gmail.com>", // Something like: Jane Doe <janedoe@gmail.com>
-      to: "devmanishmittal@gmail.com",
+      from: "Manish Mittal <devmanishmittal@gmail.com>", // Something like: Jane Doe <janedoe@gmail.com>
+      to: "mittalmanish938@gmail.com",
       subject: "test", // email subject
       html: `<p style="font-size: 16px;">test it!!</p>
                 <br />
