@@ -14,6 +14,10 @@ const makeSchema = Schema(
       type: [String],
       default: [],
     },
+    isMainLogo: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true, versionKey: false }
 );

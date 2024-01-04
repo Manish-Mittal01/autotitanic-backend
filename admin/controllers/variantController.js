@@ -53,11 +53,7 @@ module.exports.getVariantList = async (req, res) => {
       totalCount: totalCount,
     };
 
-    return ResponseService.success(
-      res,
-      "Variant list found successfully",
-      response
-    );
+    return ResponseService.success(res, "Variant list found successfully", response);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");
@@ -72,22 +68,18 @@ module.exports.addVariant = async (req, res) => {
       label,
       model,
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const newVariant = { label, model };
     const variant = new variantModel(newVariant);
 
     const isVariantExist = await variantModel.findOne({
       label: label,
+      model: model,
     });
 
     if (isVariantExist) {
-      return ResponseService.failed(
-        res,
-        "Variant with label already exits",
-        StatusCode.forbidden
-      );
+      return ResponseService.failed(res, "Variant already added", StatusCode.forbidden);
     }
 
     const result = await variant.save();
@@ -104,27 +96,14 @@ module.exports.getVariantDetails = async (req, res) => {
     const { id } = req.params;
 
     const validationError = checkRequiredFields({ id });
-    if (validationError)
-      return ResponseService.failed(
-        res,
-        validationError,
-        StatusCode.badRequest
-      );
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
     const variantDetails = await variantModel.findOne({ _id: id });
 
     if (!variantDetails)
-      return ResponseService.failed(
-        res,
-        "Invalid variant id",
-        StatusCode.notFound
-      );
+      return ResponseService.failed(res, "Invalid variant id", StatusCode.notFound);
 
-    return ResponseService.success(
-      res,
-      "Variant found successfully",
-      variantDetails
-    );
+    return ResponseService.success(res, "Variant found successfully", variantDetails);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");
@@ -138,19 +117,14 @@ module.exports.updateVariant = async (req, res) => {
     const validationError = checkRequiredFields({
       label,
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isVariantExist = await variantModel.findOne({
       _id: _id,
     });
 
     if (!isVariantExist)
-      return ResponseService.failed(
-        res,
-        "Variant not found",
-        StatusCode.notFound
-      );
+      return ResponseService.failed(res, "Variant not found", StatusCode.notFound);
     const result = await variantModel.updateOne(
       {
         _id: _id,
@@ -174,19 +148,13 @@ module.exports.deleteVariant = async (req, res) => {
     const { id } = req.body;
 
     const validationError = checkRequiredFields({ id });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isMakeExist = await variantModel.findOne({
       _id: id,
     });
 
-    if (!isMakeExist)
-      return ResponseService.failed(
-        res,
-        "Variant not found",
-        StatusCode.notFound
-      );
+    if (!isMakeExist) return ResponseService.failed(res, "Variant not found", StatusCode.notFound);
     const result = await variantModel.deleteOne({
       _id: id,
     });

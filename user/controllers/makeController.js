@@ -7,12 +7,13 @@ module.exports.getAllMake = async (req, res) => {
   try {
     const { type } = req.query;
 
-    const validationError = checkRequiredFields({ type });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    const queryObj = {};
+    if (type) {
+      queryObj.type = type;
+    }
 
     const allMake = await makeModel
-      .find({ type: type }, null, {
+      .find({ ...queryObj }, null, {
         sort: { label: 1 },
       })
       .lean();
@@ -24,11 +25,7 @@ module.exports.getAllMake = async (req, res) => {
       totalCount: totalCount,
     };
 
-    return ResponseService.success(
-      res,
-      "Make list found successfully",
-      response
-    );
+    return ResponseService.success(res, "Make list found successfully", response);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");

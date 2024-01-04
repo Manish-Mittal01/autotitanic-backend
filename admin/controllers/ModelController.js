@@ -48,11 +48,7 @@ module.exports.getModelList = async (req, res) => {
       totalCount: totalCount,
     };
 
-    return ResponseService.success(
-      res,
-      "Make list found successfully",
-      response
-    );
+    return ResponseService.success(res, "Make list found successfully", response);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");
@@ -69,22 +65,19 @@ module.exports.addModel = async (req, res) => {
       type,
       make,
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const newModel = { label, type, make };
     const model = new allModels(newModel);
 
     const isModelExist = await allModels.findOne({
       label: label,
+      make: make,
+      type: type,
     });
 
     if (isModelExist) {
-      return ResponseService.failed(
-        res,
-        "Model with label already exits",
-        StatusCode.forbidden
-      );
+      return ResponseService.failed(res, "Model already exits", StatusCode.forbidden);
     }
 
     const result = await model.save();
@@ -99,23 +92,13 @@ module.exports.addModel = async (req, res) => {
 module.exports.getModelDetails = async (req, res) => {
   try {
     const { id } = req.params;
-    if (!id)
-      return ResponseService.failed(res, "Id is required", StatusCode.notFound);
+    if (!id) return ResponseService.failed(res, "Id is required", StatusCode.notFound);
 
     const modelDetails = await allModels.findOne({ _id: id });
 
-    if (!modelDetails)
-      return ResponseService.failed(
-        res,
-        "Model not found",
-        StatusCode.notFound
-      );
+    if (!modelDetails) return ResponseService.failed(res, "Model not found", StatusCode.notFound);
 
-    return ResponseService.success(
-      res,
-      "Model found successfully",
-      modelDetails
-    );
+    return ResponseService.success(res, "Model found successfully", modelDetails);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");
@@ -132,19 +115,13 @@ module.exports.updateModel = async (req, res) => {
       makeId,
       id,
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isModelExist = await allModels.findOne({
       _id: id,
     });
 
-    if (!isModelExist)
-      return ResponseService.failed(
-        res,
-        "Model not found",
-        StatusCode.notFound
-      );
+    if (!isModelExist) return ResponseService.failed(res, "Model not found", StatusCode.notFound);
     const result = await allModels.updateOne(
       {
         _id: id,
@@ -169,19 +146,13 @@ module.exports.deleteModel = async (req, res) => {
     const { modelId } = req.body;
 
     const validationError = checkRequiredFields({ modelId });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isModelExist = await allModels.findOne({
       _id: modelId,
     });
 
-    if (!isModelExist)
-      return ResponseService.failed(
-        res,
-        "Model not found",
-        StatusCode.notFound
-      );
+    if (!isModelExist) return ResponseService.failed(res, "Model not found", StatusCode.notFound);
     const result = await allModels.deleteOne({
       _id: modelId,
     });
