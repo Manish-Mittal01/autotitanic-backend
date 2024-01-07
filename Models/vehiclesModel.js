@@ -60,6 +60,11 @@ const vehicleSchema = Schema(
     interiorColor: {
       type: String,
     },
+    isFeatured: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     kmDriven: {
       type: String,
     },

@@ -34,23 +34,24 @@ module.exports.addVehicle = async (req, res) => {
 
 module.exports.getAllvehicles = async (req, res) => {
   try {
-    let { filters = {}, paginationDetails, sort } = req.body;
+    let { filters = {}, paginationDetails } = req.body;
     paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
     const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
-
     const idFilters = ["make", "model", "variant", "city", "country"];
-
-    const filterById = (filter) => {
-      const myFilter = filter ? { _id: Types.ObjectId(filter) } : {};
-      return myFilter;
-    };
 
     const queryObj = {};
     Object.keys(filters).forEach((filter) => {
       const searchValue = filters[filter];
       if (searchValue && !extraFilters.includes(filter) && !idFilters.includes(filter)) {
-        queryObj[filter] = { $regex: searchValue, $options: "i" };
+        queryObj[filter] =
+          typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
+      }
+    });
+
+    idFilters.forEach((filter) => {
+      if (filters[filter]) {
+        queryObj[`${filter}._id`] = Types.ObjectId(filters[filter]);
       }
     });
 
@@ -66,115 +67,86 @@ module.exports.getAllvehicles = async (req, res) => {
       $gte: parseInt(filters.minMileage || 0),
       $lte: parseInt(filters.maxMileage || 100),
     };
-    console.log("queryObj", queryObj);
+    // console.log("queryObj", queryObj);
 
     let allVehicles = [];
-    if (sort) {
-      allVehicles = await vehiclesModel.find({ ...queryObj }, null, {
-        skip: (paginationDetails.page - 1) * paginationDetails.limit,
-        limit: paginationDetails.limit,
-        sort: sort,
-      });
-    } else {
-      allVehicles = await vehiclesModel.aggregate([
-        {
-          $lookup: {
-            from: "countries",
-            localField: "country",
-            foreignField: "_id",
-            pipeline: [
-              {
-                $match: filterById(filters.country),
-              },
-            ],
-            as: "country",
-          },
-        },
-        { $unwind: "$country" },
-        {
-          $lookup: {
-            from: "cities",
-            localField: "city",
-            foreignField: "_id",
-            pipeline: [
-              {
-                $match: filterById(filters.city),
-              },
-            ],
-            as: "city",
-          },
-        },
-        { $unwind: "$city" },
-        {
-          $lookup: {
-            from: "makes",
-            localField: "make",
-            foreignField: "_id",
-            pipeline: [
-              {
-                $match: filterById(filters.make),
-              },
-            ],
-            as: "make",
-          },
-        },
-        { $unwind: "$make" },
-        {
-          $lookup: {
-            from: "models",
-            localField: "model",
-            foreignField: "_id",
-            pipeline: [
-              {
-                $match: filterById(filters.model),
-              },
-            ],
-            as: "model",
-          },
-        },
-        { $unwind: "$model" },
-        {
-          $lookup: {
-            from: "variants",
-            localField: "variant",
-            foreignField: "_id",
-            pipeline: [
-              {
-                $match: filterById(filters.variant),
-              },
-            ],
-            as: "variant",
-          },
-        },
-        // { $unwind: "$variant" },
 
-        {
-          $skip: (Number(paginationDetails.page) - 1) * paginationDetails.limit,
+    allVehicles = await vehiclesModel.aggregate([
+      {
+        $lookup: {
+          from: "countries",
+          localField: "country",
+          foreignField: "_id",
+          as: "country",
         },
-        {
-          $limit: paginationDetails.limit,
+      },
+      { $unwind: { path: "$country", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "cities",
+          localField: "city",
+          foreignField: "_id",
+          as: "city",
         },
-        {
-          $match: {
-            ...queryObj,
-          },
+      },
+      { $unwind: { path: "$city", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "makes",
+          localField: "make",
+          foreignField: "_id",
+          as: "make",
         },
-      ]);
-    }
+      },
+      { $unwind: { path: "$make", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "models",
+          localField: "model",
+          foreignField: "_id",
+          as: "model",
+        },
+      },
+      { $unwind: { path: "$model", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "variants",
+          localField: "variant",
+          foreignField: "_id",
+          as: "variant",
+        },
+      },
+      { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $skip: (Number(paginationDetails.page) - 1) * paginationDetails.limit,
+      },
+      {
+        $limit: paginationDetails.limit,
+      },
+      {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
+        $sort: paginationDetails.sortBy
+          ? { [paginationDetails.sortBy]: paginationDetails.order }
+          : { _id: 1 },
+      },
+    ]);
 
-    const countFilters = {};
+    // console.log("allVehicles", allVehicles);
+
+    const countFilters = { ...queryObj };
     idFilters.forEach((filter) => {
       if (filters[filter]) {
+        delete countFilters[`${filter}._id`];
+
         countFilters[filter] = filters[filter];
       }
     });
 
-    const totalCount = await vehiclesModel.countDocuments({
-      ...queryObj,
-      ...countFilters,
-    });
-
-    console.log("allVehicles", allVehicles);
+    const totalCount = await vehiclesModel.countDocuments({ ...countFilters });
 
     const response = {
       items: allVehicles,
@@ -192,29 +164,122 @@ module.exports.getResultCount = async (req, res) => {
   try {
     let { filters } = req.body;
 
-    const newFilters = {};
-    ["country", "make", "model"].forEach((filter) => {
-      if (filters?.[filter]) {
-        newFilters[filter] = filters[filter];
+    // const newFilters = {};
+    // ["country", "make", "model"].forEach((filter) => {
+    //   if (filters?.[filter]) {
+    //     newFilters[filter] = filters[filter];
+    //   }
+    // });
+    // if (filters?.minPrice) {
+    //   newFilters.price = {
+    //     ...newFilters.price,
+    //     $gte: parseInt(filters.minPrice),
+    //   };
+    // }
+    // if (filters?.maxPrice) {
+    //   newFilters.price = {
+    //     ...newFilters.price,
+    //     $lte: parseInt(filters.maxPrice),
+    //   };
+    // }
+
+    // console.log("newFilters", newFilters);
+
+    // let vehiclesCount = await vehiclesModel.countDocuments({
+    //   ...newFilters,
+    // });
+
+    const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
+    const idFilters = ["make", "model", "variant", "city", "country"];
+
+    const queryObj = {};
+    Object.keys(filters).forEach((filter) => {
+      const searchValue = filters[filter];
+      if (searchValue && !extraFilters.includes(filter) && !idFilters.includes(filter)) {
+        queryObj[filter] =
+          typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
       }
     });
-    if (filters?.minPrice) {
-      newFilters.price = {
-        $gte: parseInt(filters.minPrice),
-      };
-    }
-    if (filters?.maxPrice) {
-      newFilters.price = {
-        $lte: parseInt(filters.maxPrice),
-      };
-    }
 
-    let vehiclesCount = await vehiclesModel.countDocuments({
-      ...newFilters,
+    idFilters.forEach((filter) => {
+      if (filters[filter]) {
+        queryObj[`${filter}._id`] = Types.ObjectId(filters[filter]);
+      }
     });
 
+    queryObj.price = {
+      $gte: parseInt(filters.minPrice) || 0,
+      $lte: parseInt(filters.maxPrice || 2147483647),
+    };
+    queryObj.year = {
+      $gte: parseInt(filters.minYear || 2000),
+      $lte: parseInt(filters.maxYear || new Date().getFullYear()),
+    };
+    queryObj.mileage = {
+      $gte: parseInt(filters.minMileage || 0),
+      $lte: parseInt(filters.maxMileage || 100),
+    };
+    // console.log("queryObj", queryObj);
+
+    const allVehiclesCount = await vehiclesModel.aggregate([
+      {
+        $lookup: {
+          from: "countries",
+          localField: "country",
+          foreignField: "_id",
+          as: "country",
+        },
+      },
+      { $unwind: { path: "$country", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "cities",
+          localField: "city",
+          foreignField: "_id",
+          as: "city",
+        },
+      },
+      { $unwind: { path: "$city", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "makes",
+          localField: "make",
+          foreignField: "_id",
+          as: "make",
+        },
+      },
+      { $unwind: { path: "$make", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "models",
+          localField: "model",
+          foreignField: "_id",
+          as: "model",
+        },
+      },
+      { $unwind: { path: "$model", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "variants",
+          localField: "variant",
+          foreignField: "_id",
+          as: "variant",
+        },
+      },
+      { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
+        $group: { _id: null, count: { $sum: 1 } },
+      },
+    ]);
+
     const response = {
-      totalCount: vehiclesCount,
+      // totalCount: vehiclesCount,
+      totalCount: allVehiclesCount[0]?.count || 0,
     };
 
     return ResponseService.success(res, "Count successful", response);

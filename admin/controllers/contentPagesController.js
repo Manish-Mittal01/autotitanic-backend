@@ -9,14 +9,10 @@ module.exports.getContentPageList = async (req, res) => {
 
     const response = contentPages || {};
 
-    return ResponseService.success(res, "Page added successfully", response);
+    return ResponseService.success(res, "Page list found successfully", response);
   } catch (error) {
     console.log("erro", error);
-    ResponseService.failed(
-      res,
-      "Something wrong happend",
-      StatusCode.srevrError
-    );
+    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
 };
 
@@ -27,13 +23,9 @@ module.exports.getContentPage = async (req, res) => {
 
     const response = contentPages || {};
 
-    return ResponseService.success(res, "Page added successfully", response);
+    return ResponseService.success(res, "Page found successfully", response);
   } catch (error) {
-    ResponseService.failed(
-      res,
-      "Something wrong happend",
-      StatusCode.srevrError
-    );
+    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
 };
 
@@ -42,18 +34,13 @@ module.exports.addContentPage = async (req, res) => {
     const { page, description } = req.body;
 
     const validationError = checkRequiredFields({ page, description });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isPageExist = await contentPagesModel.findOne({ page });
 
     console.log("isPageExist", isPageExist);
     if (isPageExist)
-      return ResponseService.failed(
-        res,
-        "Page heading already exist",
-        StatusCode.notFound
-      );
+      return ResponseService.failed(res, "Page heading already exist", StatusCode.notFound);
 
     const newPageContent = { page, description };
     const pageContent = new contentPagesModel(newPageContent);
@@ -62,11 +49,7 @@ module.exports.addContentPage = async (req, res) => {
 
     return ResponseService.success(res, "Page added successfully", result);
   } catch (error) {
-    ResponseService.failed(
-      res,
-      "Something wrong happend",
-      StatusCode.srevrError
-    );
+    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
 };
 
@@ -75,28 +58,16 @@ module.exports.updateContentPage = async (req, res) => {
     const { page, description, _id } = req.body;
 
     const validationError = checkRequiredFields({ page, description, _id });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isPageExist = await contentPagesModel.find({ _id });
     if (!isPageExist)
-      return ResponseService.failed(
-        res,
-        "Page doen not exist",
-        StatusCode.notFound
-      );
+      return ResponseService.failed(res, "Page doen not exist", StatusCode.notFound);
 
-    const result = await contentPagesModel.updateOne(
-      { _id: _id },
-      { page, description }
-    );
+    const result = await contentPagesModel.updateOne({ _id: _id }, { page, description });
 
     return ResponseService.success(res, "Page updated successfully", result);
   } catch (error) {
-    ResponseService.failed(
-      res,
-      "Something wrong happend",
-      StatusCode.srevrError
-    );
+    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
 };
