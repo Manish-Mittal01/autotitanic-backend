@@ -4,13 +4,13 @@ const jwt = require("jsonwebtoken");
 const userSchema = Schema(
   {
     mobile: {
-      type: Number,
-      required: true,
-    },
-    countryCode: {
       type: String,
       required: true,
     },
+    // countryCode: {
+    //   type: String,
+    //   required: true,
+    // },
     password: {
       type: String,
       required: true,

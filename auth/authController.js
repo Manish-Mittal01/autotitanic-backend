@@ -25,17 +25,7 @@ let transporter = nodemailer.createTransport({
 
 module.exports.register = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      userType,
-      country,
-      countryCode,
-      mobile,
-      password,
-      dealerLogo,
-      userAvatar,
-    } = req.body;
+    const { name, email, userType, country, mobile, password, image } = req.body;
 
     const validationError = checkRequiredFields({
       name,
@@ -43,20 +33,15 @@ module.exports.register = async (req, res) => {
       userType,
       country,
       mobile,
-      countryCode,
+      // countryCode,
       password,
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const userExist = await UserModel.findOne({ email });
 
     if (userExist)
-      return ResponseService.failed(
-        res,
-        "User already exist with email",
-        StatusCode.forbidden
-      );
+      return ResponseService.failed(res, "User already exist with email", StatusCode.forbidden);
 
     const newUser = {
       name,
@@ -64,10 +49,10 @@ module.exports.register = async (req, res) => {
       userType,
       country,
       mobile,
-      countryCode,
+      // countryCode,
       password,
-      dealerLogo,
-      userAvatar,
+      dealerLogo: userType === "private" ? "" : image,
+      userAvatar: userType === "private" ? image : "",
     };
     const user = new UserModel(newUser);
 
@@ -89,26 +74,16 @@ module.exports.login = async (req, res) => {
     const { email, password } = req.body;
 
     const validationError = checkRequiredFields({ email, password });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     if (password && typeof password !== "string")
-      return ResponseService.failed(
-        res,
-        "Password must be string",
-        StatusCode.badRequest
-      );
+      return ResponseService.failed(res, "Password must be string", StatusCode.badRequest);
 
     const user = await UserModel.findOne({ email });
 
-    if (!user)
-      return ResponseService.failed(res, "User not Found", StatusCode.notFound);
+    if (!user) return ResponseService.failed(res, "User not Found", StatusCode.notFound);
     if (user.status === "blocked")
-      return ResponseService.failed(
-        res,
-        "User is blocked",
-        StatusCode.unauthorized
-      );
+      return ResponseService.failed(res, "User is blocked", StatusCode.unauthorized);
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
@@ -117,19 +92,11 @@ module.exports.login = async (req, res) => {
 
       return ResponseService.success(res, "Login Successful", { token });
     } else {
-      return ResponseService.failed(
-        res,
-        "Incorrect Email or Password",
-        StatusCode.unauthorized
-      );
+      return ResponseService.failed(res, "Incorrect Email or Password", StatusCode.unauthorized);
     }
   } catch (error) {
     console.log("error in login controller", error);
-    return ResponseService.failed(
-      res,
-      "Something wrong happend",
-      StatusCode.srevrError
-    );
+    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
 };
 
@@ -141,19 +108,11 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
       const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
       let isValidEmail = emailRegex.test(email);
       if (!email || !isValidEmail)
-        return ResponseService.failed(
-          res,
-          "Invalid email",
-          StatusCode.forbidden
-        );
+        return ResponseService.failed(res, "Invalid email", StatusCode.forbidden);
 
       const isUserExist = UserModel.findOne(email);
       if (!isUserExist)
-        return ResponseService.failed(
-          res,
-          "user does not exit",
-          StatusCode.notFound
-        );
+        return ResponseService.failed(res, "user does not exit", StatusCode.notFound);
 
       const OTP = otpGenerator.generate(6, {
         digits: true,
@@ -180,11 +139,7 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
       // returning result
       return transporter.sendMail(mailOptions, (erro, info) => {
         if (erro) {
-          return ResponseService.failed(
-            res,
-            erro.toString(),
-            StatusCode.badRequest
-          );
+          return ResponseService.failed(res, erro.toString(), StatusCode.badRequest);
         }
 
         return ResponseService.success(res, "Otp sent to your mail", result);
@@ -192,11 +147,7 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
     });
   } catch (error) {
     console.log("error", error?.message);
-    return ResponseService.failed(
-      res,
-      "Something wrong happend",
-      StatusCode.srevrError
-    );
+    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
 });
 
@@ -210,15 +161,11 @@ module.exports.resetPassword = async (req, res) => {
 
     const rightOtpFind = otpHolder.pop();
     const validOtp = await bcrypt.compare(otp, rightOtpFind.otp);
-    if (!validOtp)
-      return ResponseService.failed(res, "Invalid Otp", StatusCode.badRequest);
+    if (!validOtp) return ResponseService.failed(res, "Invalid Otp", StatusCode.badRequest);
 
     const salt = await bcrypt.genSalt(10);
     let newPassword = await bcrypt.hash(password, salt);
-    result = await UserModel.updateOne(
-      { email: email },
-      { password: newPassword }
-    );
+    result = await UserModel.updateOne({ email: email }, { password: newPassword });
     result = {};
 
     const otpDelete = await otpModel.deleteMany({
@@ -228,10 +175,6 @@ module.exports.resetPassword = async (req, res) => {
     ResponseService.success(res, "Password updated!!");
   } catch (error) {
     console.log("error", error);
-    ResponseService.failed(
-      res,
-      "Something wrong happend",
-      StatusCode.srevrError
-    );
+    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
 };

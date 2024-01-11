@@ -51,9 +51,9 @@ const vehicleSchema = Schema(
     fuelType: {
       type: String,
     },
-    fuelConsumption: {
-      type: String,
-    },
+    // fuelConsumption: {
+    //   type: String,
+    // },
     gearBox: {
       type: String,
     },
@@ -73,8 +73,9 @@ const vehicleSchema = Schema(
       ref: "makes",
     },
     media: {
-      type: [String],
+      type: [{ url: String, type: { type: String } }],
       required: true,
+      default: [],
     },
     model: {
       type: Schema.Types.ObjectId,
