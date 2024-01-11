@@ -110,7 +110,7 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
       if (!email || !isValidEmail)
         return ResponseService.failed(res, "Invalid email", StatusCode.forbidden);
 
-      const isUserExist = UserModel.findOne(email);
+      const isUserExist = await UserModel.findOne({ email });
       if (!isUserExist)
         return ResponseService.failed(res, "user does not exit", StatusCode.notFound);
 

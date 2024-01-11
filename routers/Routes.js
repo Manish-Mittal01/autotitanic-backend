@@ -1,7 +1,7 @@
 const router = require("express").Router();
 const { addUser } = require("../user/controllers/userController");
 const { upload, uploadFiles } = require("../common/file-upload-controller");
-const { login, register, sendOtp } = require("../auth/authController");
+const { login, register, sendOtp, resetPassword } = require("../auth/authController");
 
 //admin import
 const {
@@ -41,10 +41,7 @@ const {
 // user import
 const { getAllMake } = require("../user/controllers/makeController");
 const { getAllModel } = require("../user/controllers/ModelController");
-const {
-  getAllCountries,
-  getAllCities,
-} = require("../user/controllers/locationController");
+const { getAllCountries, getAllCities } = require("../user/controllers/locationController");
 const {
   getVariantList,
   addVariant,
@@ -65,7 +62,7 @@ const { sendMail } = require("../common/firebaseMailer");
 router.route("/login").post(login);
 router.route("/register").post(register);
 router.route("/sendOtp").post(sendOtp);
-// router.route("/sendOtp").post(sendMail);
+router.route("/resetPassword").post(resetPassword);
 
 //user
 router.route("/allMake").get(getAllMake);
