@@ -7,7 +7,9 @@ const { StatusCode } = require("../common/Constants");
 const { ResponseService } = require("../common/responseService");
 const { checkRequiredFields } = require("../common/utility");
 const otpModel = require("../Models/otpModel");
+const { UserServices } = require("../services/userServices");
 const cors = require("cors")({ origin: true });
+const jwt = require("jsonwebtoken");
 
 /**
  * Here we're using Gmail to send
@@ -88,7 +90,7 @@ module.exports.login = async (req, res) => {
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (user.email === email && isPasswordCorrect) {
-      const token = user.generateJWT();
+      const token = user.generateJWT(user);
 
       return ResponseService.success(res, "Login Successful", { token });
     } else {
@@ -173,6 +175,26 @@ module.exports.resetPassword = async (req, res) => {
     });
 
     ResponseService.success(res, "Password updated!!");
+  } catch (error) {
+    console.log("error", error);
+    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+  }
+};
+
+module.exports.getUserProfile = async (req, res) => {
+  try {
+    const token = req.headers["x-access-token"];
+
+    const isTokenValid = await UserServices.validateToken(token);
+    // console.log("isTokenValid", isTokenValid);
+    if (isTokenValid?.tokenExpired)
+      return ResponseService.failed(res, "Token expired", StatusCode.unauthorized);
+
+    const user = await UserModel.findOne({ _id: isTokenValid._id });
+
+    if (!user) return ResponseService.failed(res, "User not found", StatusCode.notFound);
+
+    ResponseService.success(res, "User found!!", user);
   } catch (error) {
     console.log("error", error);
     ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);

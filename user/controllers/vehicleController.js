@@ -148,7 +148,6 @@ module.exports.getAllvehicles = async (req, res) => {
 
     // const totalCount = await vehiclesModel.countDocuments({ ...countFilters });
     const vehicleCount = await getVehicleCount(queryObj);
-    console.log("vehicleCount", vehicleCount);
 
     const response = {
       items: allVehicles,

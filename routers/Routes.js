@@ -1,7 +1,13 @@
 const router = require("express").Router();
 const { addUser } = require("../user/controllers/userController");
 const { upload, uploadFiles } = require("../common/file-upload-controller");
-const { login, register, sendOtp, resetPassword } = require("../auth/authController");
+const {
+  login,
+  register,
+  sendOtp,
+  resetPassword,
+  getUserProfile,
+} = require("../auth/authController");
 
 //admin import
 const {
@@ -63,6 +69,7 @@ router.route("/login").post(login);
 router.route("/register").post(register);
 router.route("/sendOtp").post(sendOtp);
 router.route("/resetPassword").post(resetPassword);
+router.route("/getUserProfile").get(getUserProfile);
 
 //user
 router.route("/allMake").get(getAllMake);

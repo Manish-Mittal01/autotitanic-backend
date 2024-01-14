@@ -17,7 +17,7 @@ class UserServices {
 
   static async validateToken(token) {
     const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
-    const user = {};
+    let user = {};
 
     jwt.verify(token, JWT_SECRET_KEY, (error, decoded) => {
       if (error) {

@@ -46,7 +46,7 @@ const userSchema = Schema(
   { timestamps: true, versionKey: false }
 );
 
-userSchema.methods.generateJWT = () => {
+userSchema.methods.generateJWT = function () {
   const token = jwt.sign(
     {
       _id: this._id,
