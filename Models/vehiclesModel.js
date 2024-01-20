@@ -107,9 +107,9 @@ const vehicleSchema = Schema(
       type: String,
       required: true,
     },
-    userId: {
+    user: {
       type: String,
-      // required: true,
+      required: true,
     },
     variant: {
       type: Schema.Types.ObjectId,

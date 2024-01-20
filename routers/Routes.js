@@ -42,6 +42,7 @@ const {
   getAllvehicles,
   addVehicle,
   getResultCount,
+  getVehicleDetails,
 } = require("../user/controllers/vehicleController");
 
 // user import
@@ -63,6 +64,7 @@ const {
   getContentPageList,
 } = require("../admin/controllers/contentPagesController");
 const { sendMail } = require("../common/firebaseMailer");
+const { addToCompare, getCompareList } = require("../user/controllers/compareController");
 
 //auth
 router.route("/login").post(login);
@@ -80,6 +82,9 @@ router.route("/allCities/:countryId").get(getAllCities);
 router.route("/getResultCount").post(getResultCount);
 router.route("/allVehicles").post(getAllvehicles);
 router.route("/addVehicle").post(addVehicle);
+router.route("/vehicleDetails/:id").get(getVehicleDetails);
+router.route("/addToCompare").post(addToCompare);
+router.route("/getCompareList").get(getCompareList);
 
 //admin
 //make

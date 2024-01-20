@@ -187,8 +187,8 @@ module.exports.getUserProfile = async (req, res) => {
 
     const isTokenValid = await UserServices.validateToken(token);
     // console.log("isTokenValid", isTokenValid);
-    if (isTokenValid?.tokenExpired)
-      return ResponseService.failed(res, "Token expired", StatusCode.unauthorized);
+    if (isTokenValid?.tokenExpired || !isTokenValid._id)
+      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
     const user = await UserModel.findOne({ _id: isTokenValid._id });
 

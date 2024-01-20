@@ -3,10 +3,17 @@ const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 const vehiclesModel = require("../../Models/vehiclesModel");
+const { UserServices } = require("../../services/userServices");
 
 module.exports.addVehicle = async (req, res) => {
   try {
     const { condition, country, city, title, description, media, price, currency, type } = req.body;
+    const token = req.headers["x-access-token"];
+
+    const isTokenValid = await UserServices.validateToken(token);
+    // console.log("isTokenValid", isTokenValid);
+    if (isTokenValid?.tokenExpired || !isTokenValid._id)
+      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
     const validationError = checkRequiredFields({
       condition,
@@ -21,7 +28,7 @@ module.exports.addVehicle = async (req, res) => {
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newVehicle = { ...req.body };
+    const newVehicle = { ...req.body, user: isTokenValid._id };
     const vehicle = new vehiclesModel(newVehicle);
     const result = await vehicle.save();
 
@@ -57,7 +64,7 @@ module.exports.getAllvehicles = async (req, res) => {
 
     queryObj.price = {
       $gte: parseInt(filters.minPrice) || 0,
-      $lte: parseInt(filters.maxPrice || 2147483647),
+      $lte: parseInt(filters.maxPrice || 9999999999),
     };
     queryObj.year = {
       $gte: parseInt(filters.minYear || 2000),
@@ -65,13 +72,11 @@ module.exports.getAllvehicles = async (req, res) => {
     };
     queryObj.mileage = {
       $gte: parseInt(filters.minMileage || 0),
-      $lte: parseInt(filters.maxMileage || 100),
+      $lte: parseInt(filters.maxMileage || 999999),
     };
     // console.log("queryObj", queryObj);
 
-    let allVehicles = [];
-
-    allVehicles = await vehiclesModel.aggregate([
+    let allVehicles = await vehiclesModel.aggregate([
       {
         $lookup: {
           from: "countries",
@@ -118,6 +123,15 @@ module.exports.getAllvehicles = async (req, res) => {
       },
       { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
       {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
         $skip: (Number(paginationDetails.page) - 1) * paginationDetails.limit,
       },
       {
@@ -137,16 +151,6 @@ module.exports.getAllvehicles = async (req, res) => {
 
     // console.log("allVehicles", allVehicles);
 
-    // const countFilters = { ...queryObj };
-    // idFilters.forEach((filter) => {
-    //   if (filters[filter]) {
-    //     delete countFilters[`${filter}._id`];
-
-    //     countFilters[filter] = filters[filter];
-    //   }
-    // });
-
-    // const totalCount = await vehiclesModel.countDocuments({ ...countFilters });
     const vehicleCount = await getVehicleCount(queryObj);
 
     const response = {
@@ -287,7 +291,7 @@ const getVehicleCount = async (filters) => {
 
   queryObj.price = {
     $gte: parseInt(filters.minPrice) || 0,
-    $lte: parseInt(filters.maxPrice || 2147483647),
+    $lte: parseInt(filters.maxPrice || 9999999999),
   };
   queryObj.year = {
     $gte: parseInt(filters.minYear || 2000),
@@ -295,7 +299,7 @@ const getVehicleCount = async (filters) => {
   };
   queryObj.mileage = {
     $gte: parseInt(filters.minMileage || 0),
-    $lte: parseInt(filters.maxMileage || 100),
+    $lte: parseInt(filters.maxMileage || 999999),
   };
   // console.log("queryObj", queryObj);
 
@@ -358,4 +362,24 @@ const getVehicleCount = async (filters) => {
   const totalCount = allVehiclesCount[0]?.count || 0;
 
   return totalCount;
+};
+
+module.exports.getVehicleDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const isValidId = Types.ObjectId.isValid(id);
+    if (!isValidId) return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
+
+    const details = await vehiclesModel
+      .findOne({ _id: id })
+      .populate("make model variant country city");
+
+    if (!details || details.length <= 0)
+      return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
+
+    return ResponseService.success(res, "Vehicle details found", details);
+  } catch (error) {
+    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+  }
 };
