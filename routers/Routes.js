@@ -64,7 +64,16 @@ const {
   getContentPageList,
 } = require("../admin/controllers/contentPagesController");
 const { sendMail } = require("../common/firebaseMailer");
-const { addToCompare, getCompareList } = require("../user/controllers/compareController");
+const {
+  addToCompare,
+  getCompareList,
+  removeCompareListItem,
+} = require("../user/controllers/compareController");
+const {
+  addToWishlist,
+  removewishlistItem,
+  getWishlist,
+} = require("../user/controllers/wishlistController");
 
 //auth
 router.route("/login").post(login);
@@ -85,6 +94,10 @@ router.route("/addVehicle").post(addVehicle);
 router.route("/vehicleDetails/:id").get(getVehicleDetails);
 router.route("/addToCompare").post(addToCompare);
 router.route("/getCompareList").get(getCompareList);
+router.route("/removeCompareListItem").post(removeCompareListItem);
+router.route("/addToWishlist").post(addToWishlist);
+router.route("/getWishlist").get(getWishlist);
+router.route("/removewishlistItem").post(removewishlistItem);
 
 //admin
 //make

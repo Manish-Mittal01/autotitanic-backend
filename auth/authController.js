@@ -10,6 +10,7 @@ const otpModel = require("../Models/otpModel");
 const { UserServices } = require("../services/userServices");
 const cors = require("cors")({ origin: true });
 const jwt = require("jsonwebtoken");
+const compareModel = require("../Models/compareModel");
 
 /**
  * Here we're using Gmail to send
@@ -190,11 +191,12 @@ module.exports.getUserProfile = async (req, res) => {
     if (isTokenValid?.tokenExpired || !isTokenValid._id)
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
-    const user = await UserModel.findOne({ _id: isTokenValid._id });
+    const user = await UserModel.findOne({ _id: isTokenValid._id }).lean();
+    const compareCount = await compareModel.countDocuments();
 
     if (!user) return ResponseService.failed(res, "User not found", StatusCode.notFound);
 
-    ResponseService.success(res, "User found!!", user);
+    ResponseService.success(res, "User found!!", { ...user, compareCount: compareCount || 0 });
   } catch (error) {
     console.log("error", error);
     ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);

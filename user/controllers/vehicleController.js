@@ -45,7 +45,7 @@ module.exports.getAllvehicles = async (req, res) => {
     paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
     const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
-    const idFilters = ["make", "model", "variant", "city", "country"];
+    const idFilters = ["make", "model", "variant", "city", "country", "user"];
 
     const queryObj = {};
     Object.keys(filters).forEach((filter) => {
@@ -373,7 +373,7 @@ module.exports.getVehicleDetails = async (req, res) => {
 
     const details = await vehiclesModel
       .findOne({ _id: id })
-      .populate("make model variant country city");
+      .populate("make model variant country city user");
 
     if (!details || details.length <= 0)
       return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);

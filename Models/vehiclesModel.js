@@ -108,7 +108,8 @@ const vehicleSchema = Schema(
       required: true,
     },
     user: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "users",
       required: true,
     },
     variant: {
