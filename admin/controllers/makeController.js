@@ -2,7 +2,6 @@ const { ResponseService } = require("../../common/responseService");
 const makeModel = require("../../Models/makeModel");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
-const allModels = require("../../Models/allModels");
 
 module.exports.getMakeList = async (req, res) => {
   try {
@@ -31,11 +30,7 @@ module.exports.getMakeList = async (req, res) => {
       totalCount: totalCount,
     };
 
-    return ResponseService.success(
-      res,
-      "Make list found successfully",
-      response
-    );
+    return ResponseService.success(res, "Make list found successfully", response);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");
@@ -51,8 +46,7 @@ module.exports.addMake = async (req, res) => {
       type,
       logo,
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const newMake = { label, type, logo };
     const make = new makeModel(newMake);
@@ -62,11 +56,7 @@ module.exports.addMake = async (req, res) => {
     });
 
     if (isMakeExist) {
-      return ResponseService.failed(
-        res,
-        "Make with label already exits",
-        StatusCode.forbidden
-      );
+      return ResponseService.failed(res, "Make with label already exits", StatusCode.forbidden);
     }
 
     const result = await make.save();
@@ -84,18 +74,9 @@ module.exports.getMakeDetails = async (req, res) => {
 
     const makeDetails = await makeModel.findOne({ _id: id });
 
-    if (!makeDetails)
-      return ResponseService.failed(
-        res,
-        "Invalid make id",
-        StatusCode.notFound
-      );
+    if (!makeDetails) return ResponseService.failed(res, "Invalid make id", StatusCode.notFound);
 
-    return ResponseService.success(
-      res,
-      "Make list found successfully",
-      makeDetails
-    );
+    return ResponseService.success(res, "Make list found successfully", makeDetails);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");
@@ -112,15 +93,13 @@ module.exports.updateMake = async (req, res) => {
       logo,
       makeId,
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isMakeExist = await makeModel.findOne({
       _id: makeId,
     });
 
-    if (!isMakeExist)
-      return ResponseService.failed(res, "Make not found", StatusCode.notFound);
+    if (!isMakeExist) return ResponseService.failed(res, "Make not found", StatusCode.notFound);
     const result = await makeModel.updateOne(
       {
         _id: makeId,
@@ -146,15 +125,13 @@ module.exports.deleteMake = async (req, res) => {
     const { makeId } = req.body;
 
     const validationError = checkRequiredFields({ makeId });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isMakeExist = await makeModel.findOne({
       _id: makeId,
     });
 
-    if (!isMakeExist)
-      return ResponseService.failed(res, "Make not found", StatusCode.notFound);
+    if (!isMakeExist) return ResponseService.failed(res, "Make not found", StatusCode.notFound);
     const result = await makeModel.deleteOne({
       _id: makeId,
     });

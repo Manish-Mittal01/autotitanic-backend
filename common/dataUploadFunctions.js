@@ -11,6 +11,7 @@ module.exports.uploadMakeAndModel = async (req, res) => {
     const makes = Object.keys(makeAndModels);
     for (let make of makes) {
       const myMake = allMake.find((oldMake) => oldMake.label === make);
+
       if (myMake) {
         for (let model of makeAndModels[make]) {
           const makeId = myMake?._id;
@@ -26,17 +27,18 @@ module.exports.uploadMakeAndModel = async (req, res) => {
 
           if (!isModelExist) {
             const result = await mymodel.save();
-            console.log("Manish Mittal");
           } else {
-            console.log("Model exist");
           }
         }
       }
     }
 
+    const allModel = await allModels.find().lean().populate("make");
+    const allModelCount = await allModels.countDocuments();
+
     // console.log("allMake", allMake);
 
-    return ResponseService.success(res, "Updated", makeAndModels);
+    return ResponseService.success(res, "Updated", { items: allModel, count: allModelCount });
   } catch (error) {
     console.log("error", error);
   }

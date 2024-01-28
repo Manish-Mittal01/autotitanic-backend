@@ -9,7 +9,14 @@ module.exports.getModelList = async (req, res) => {
 
     const queryObj = {};
     if (search) {
-      queryObj.label = { $regex: search, $options: "i" };
+      queryObj["$or"] = [
+        {
+          "make.label": { $regex: search || "", $options: "i" },
+        },
+        {
+          label: { $regex: search || "", $options: "i" },
+        },
+      ];
     }
     if (category) {
       queryObj.type = category;
@@ -41,11 +48,29 @@ module.exports.getModelList = async (req, res) => {
       },
     ]);
 
-    const totalCount = await allModels.count();
+    const totalCount = await allModels.aggregate([
+      {
+        $lookup: {
+          from: "makes",
+          localField: "make",
+          foreignField: "_id",
+          as: "make",
+        },
+      },
+      { $unwind: "$make" },
+      {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
+        $group: { _id: null, count: { $sum: 1 } },
+      },
+    ]);
 
     const response = {
       items: allModel,
-      totalCount: totalCount,
+      totalCount: totalCount[0]?.count || 0,
     };
 
     return ResponseService.success(res, "Make list found successfully", response);
