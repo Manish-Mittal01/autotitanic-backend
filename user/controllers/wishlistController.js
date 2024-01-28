@@ -54,7 +54,8 @@ module.exports.getWishlist = async (req, res) => {
     const wishlist = await wishlistmodel.find({ user: isTokenValid._id }).populate({
       path: "user vehicle",
       populate: {
-        path: "make model variant city country user",
+        path: "make model city country user",
+        // path: "make model variant city country user",
         strictPopulate: false,
       },
     });

@@ -54,7 +54,8 @@ module.exports.getCompareList = async (req, res) => {
     const compareList = await compareModel.find({ user: isTokenValid._id }).populate({
       path: "user vehicle",
       populate: {
-        path: "make model variant",
+        path: "make model",
+        // path: "make model variant",
         strictPopulate: false,
       },
     });

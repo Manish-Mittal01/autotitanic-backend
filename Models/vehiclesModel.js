@@ -98,6 +98,19 @@ const vehicleSchema = Schema(
     seat: {
       type: String,
     },
+    sellOrRent: {
+      type: String,
+      required: true,
+      default: "sell",
+      enum: ["sell", "rent"],
+    },
+    status: {
+      type: String,
+      required: true,
+      default: "pending",
+      enum: ["pending", "approved", "rejected", "deleted", "draft"],
+    },
+
     // vehicle type
     type: {
       type: String,
@@ -112,10 +125,10 @@ const vehicleSchema = Schema(
       ref: "users",
       required: true,
     },
-    variant: {
-      type: Schema.Types.ObjectId,
-      ref: "variants",
-    },
+    // variant: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: "variants",
+    // },
     year: {
       type: Number,
     },

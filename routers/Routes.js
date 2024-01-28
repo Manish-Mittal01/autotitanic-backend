@@ -43,6 +43,8 @@ const {
   addVehicle,
   getResultCount,
   getVehicleDetails,
+  updateVehicle,
+  deleteVehicle,
 } = require("../user/controllers/vehicleController");
 
 // user import
@@ -74,6 +76,8 @@ const {
   removewishlistItem,
   getWishlist,
 } = require("../user/controllers/wishlistController");
+const { uploadMakeAndModel } = require("../common/dataUploadFunctions");
+const { allUsers, blockUser } = require("../admin/controllers/userController");
 
 //auth
 router.route("/login").post(login);
@@ -81,20 +85,30 @@ router.route("/register").post(register);
 router.route("/sendOtp").post(sendOtp);
 router.route("/resetPassword").post(resetPassword);
 router.route("/getUserProfile").get(getUserProfile);
+router.route("/uploadMakeAndModel").get(uploadMakeAndModel);
 
 //user
+//filters
 router.route("/allMake").get(getAllMake);
 router.route("/allModel/:makeId").get(getAllModel);
 router.route("/allVariant/:modelId").get(getAllVariant);
 router.route("/allCountry").get(getAllCountries);
 router.route("/allCities/:countryId").get(getAllCities);
+
+//vehicle
 router.route("/getResultCount").post(getResultCount);
 router.route("/allVehicles").post(getAllvehicles);
 router.route("/addVehicle").post(addVehicle);
 router.route("/vehicleDetails/:id").get(getVehicleDetails);
+router.route("/updateVehicle/:id").post(updateVehicle);
+router.route("/deleteVehicle/:id").post(deleteVehicle);
+
+//user compare list
 router.route("/addToCompare").post(addToCompare);
 router.route("/getCompareList").get(getCompareList);
 router.route("/removeCompareListItem").post(removeCompareListItem);
+
+//user wishlist
 router.route("/addToWishlist").post(addToWishlist);
 router.route("/getWishlist").get(getWishlist);
 router.route("/removewishlistItem").post(removewishlistItem);
@@ -134,6 +148,10 @@ router.route("/addCity").post(addCities);
 router.route("/viewCity/:id").get(getCityDetails);
 router.route("/updateCity").post(updateCity);
 router.route("/deleteCity/:cityId").delete(deleteCity);
+
+// users
+router.route("/allUsers").post(allUsers);
+router.route("/userStatus").post(blockUser);
 
 //content-page
 router.route("/updateContentPage").post(updateContentPage);

@@ -45,7 +45,8 @@ module.exports.getAllvehicles = async (req, res) => {
     paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
     const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
-    const idFilters = ["make", "model", "variant", "city", "country", "user"];
+    const idFilters = ["make", "model", "city", "country", "user"];
+    // const idFilters = ["make", "model", "variant", "city", "country", "user"];
 
     const queryObj = {};
     Object.keys(filters).forEach((filter) => {
@@ -113,15 +114,15 @@ module.exports.getAllvehicles = async (req, res) => {
         },
       },
       { $unwind: { path: "$model", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
-      {
-        $lookup: {
-          from: "variants",
-          localField: "variant",
-          foreignField: "_id",
-          as: "variant",
-        },
-      },
-      { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      // {
+      //   $lookup: {
+      //     from: "variants",
+      //     localField: "variant",
+      //     foreignField: "_id",
+      //     as: "variant",
+      //   },
+      // },
+      // { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: "users",
@@ -171,94 +172,6 @@ module.exports.getResultCount = async (req, res) => {
 
     const vehicleCount = await getVehicleCount(filters);
 
-    // const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
-    // const idFilters = ["make", "model", "variant", "city", "country"];
-
-    // const queryObj = {};
-    // Object.keys(filters).forEach((filter) => {
-    //   const searchValue = filters[filter];
-    //   if (searchValue && !extraFilters.includes(filter) && !idFilters.includes(filter)) {
-    //     queryObj[filter] =
-    //       typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
-    //   }
-    // });
-
-    // idFilters.forEach((filter) => {
-    //   if (filters[filter]) {
-    //     queryObj[`${filter}._id`] = Types.ObjectId(filters[filter]);
-    //   }
-    // });
-
-    // queryObj.price = {
-    //   $gte: parseInt(filters.minPrice) || 0,
-    //   $lte: parseInt(filters.maxPrice || 2147483647),
-    // };
-    // queryObj.year = {
-    //   $gte: parseInt(filters.minYear || 2000),
-    //   $lte: parseInt(filters.maxYear || new Date().getFullYear()),
-    // };
-    // queryObj.mileage = {
-    //   $gte: parseInt(filters.minMileage || 0),
-    //   $lte: parseInt(filters.maxMileage || 100),
-    // };
-    // // console.log("queryObj", queryObj);
-
-    // const allVehiclesCount = await vehiclesModel.aggregate([
-    //   {
-    //     $lookup: {
-    //       from: "countries",
-    //       localField: "country",
-    //       foreignField: "_id",
-    //       as: "country",
-    //     },
-    //   },
-    //   { $unwind: { path: "$country", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
-    //   {
-    //     $lookup: {
-    //       from: "cities",
-    //       localField: "city",
-    //       foreignField: "_id",
-    //       as: "city",
-    //     },
-    //   },
-    //   { $unwind: { path: "$city", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
-    //   {
-    //     $lookup: {
-    //       from: "makes",
-    //       localField: "make",
-    //       foreignField: "_id",
-    //       as: "make",
-    //     },
-    //   },
-    //   { $unwind: { path: "$make", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
-    //   {
-    //     $lookup: {
-    //       from: "models",
-    //       localField: "model",
-    //       foreignField: "_id",
-    //       as: "model",
-    //     },
-    //   },
-    //   { $unwind: { path: "$model", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
-    //   {
-    //     $lookup: {
-    //       from: "variants",
-    //       localField: "variant",
-    //       foreignField: "_id",
-    //       as: "variant",
-    //     },
-    //   },
-    //   { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
-    //   {
-    //     $match: {
-    //       ...queryObj,
-    //     },
-    //   },
-    //   {
-    //     $group: { _id: null, count: { $sum: 1 } },
-    //   },
-    // ]);
-
     const response = {
       totalCount: vehicleCount,
     };
@@ -272,7 +185,8 @@ module.exports.getResultCount = async (req, res) => {
 
 const getVehicleCount = async (filters) => {
   const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
-  const idFilters = ["make", "model", "variant", "city", "country"];
+  const idFilters = ["make", "model", "city", "country"];
+  // const idFilters = ["make", "model", "variant", "city", "country"];
 
   const queryObj = {};
   Object.keys(filters).forEach((filter) => {
@@ -340,15 +254,15 @@ const getVehicleCount = async (filters) => {
       },
     },
     { $unwind: { path: "$model", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
-    {
-      $lookup: {
-        from: "variants",
-        localField: "variant",
-        foreignField: "_id",
-        as: "variant",
-      },
-    },
-    { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+    // {
+    //   $lookup: {
+    //     from: "variants",
+    //     localField: "variant",
+    //     foreignField: "_id",
+    //     as: "variant",
+    //   },
+    // },
+    // { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
     {
       $match: {
         ...queryObj,
@@ -373,12 +287,51 @@ module.exports.getVehicleDetails = async (req, res) => {
 
     const details = await vehiclesModel
       .findOne({ _id: id })
-      .populate("make model variant country city user");
+      .populate("make model country city user");
+    // .populate("make model variant country city user");
 
     if (!details || details.length <= 0)
       return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
 
     return ResponseService.success(res, "Vehicle details found", details);
+  } catch (error) {
+    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+  }
+};
+
+module.exports.updateVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) return ResponseService.failed(res, "id is required", StatusCode.notFound);
+    const isValidId = Types.ObjectId.isValid(id);
+    if (!isValidId) return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
+
+    const details = await vehiclesModel.findOne({ _id: id });
+
+    if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
+    const result = await vehiclesModel.updateOne({ _id: id }, { ...req.body });
+
+    return ResponseService.success(res, "Vehicle updated", result);
+  } catch (error) {
+    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+  }
+};
+
+module.exports.deleteVehicle = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) return ResponseService.failed(res, "id is required", StatusCode.notFound);
+    const isValidId = Types.ObjectId.isValid(id);
+    if (!isValidId) return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
+
+    const details = await vehiclesModel.findOne({ _id: id });
+
+    if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
+    const result = await vehiclesModel.deleteOne({ _id: id });
+
+    return ResponseService.success(res, "Vehicle Deleted", result);
   } catch (error) {
     return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
