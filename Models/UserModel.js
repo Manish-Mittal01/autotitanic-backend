@@ -1,4 +1,4 @@
-const { Schema, model } = require("mongoose");
+const { Schema, model, Types } = require("mongoose");
 const jwt = require("jsonwebtoken");
 
 const userSchema = Schema(
@@ -6,6 +6,9 @@ const userSchema = Schema(
     mobile: {
       type: String,
       required: true,
+    },
+    whatsapp: {
+      type: String,
     },
     password: {
       type: String,
@@ -29,8 +32,9 @@ const userSchema = Schema(
       required: true,
     },
     country: {
-      type: String,
+      type: Types.ObjectId,
       required: true,
+      ref: "countries",
     },
     dealerLogo: {
       type: String,

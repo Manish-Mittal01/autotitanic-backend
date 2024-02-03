@@ -1,9 +1,13 @@
+const functions = require("firebase-functions");
+const cors = require("cors")({ origin: true });
+const { transporter } = require("../../firebaseConfig");
 const { Types } = require("mongoose");
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 const vehiclesModel = require("../../Models/vehiclesModel");
 const { UserServices } = require("../../services/userServices");
+const UserModel = require("../../Models/UserModel");
 
 module.exports.addVehicle = async (req, res) => {
   try {
@@ -27,6 +31,11 @@ module.exports.addVehicle = async (req, res) => {
       type,
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
+
+    console.log("media", media);
+
+    if (media.length < 5)
+      return ResponseService.failed(res, "Atleast 5 images required", StatusCode.badRequest);
 
     const newVehicle = { ...req.body, user: isTokenValid._id };
     const vehicle = new vehiclesModel(newVehicle);
@@ -280,21 +289,21 @@ const getVehicleCount = async (filters) => {
 
 module.exports.getVehicleDetails = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { vehicleId } = req.params;
 
-    const isValidId = Types.ObjectId.isValid(id);
+    const isValidId = Types.ObjectId.isValid(vehicleId);
     if (!isValidId) return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
 
     const details = await vehiclesModel
-      .findOne({ _id: id })
+      .findOne({ _id: vehicleId })
       .populate("make model country city user");
     // .populate("make model variant country city user");
 
-    if (!details || details.length <= 0)
-      return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
+    if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
 
     return ResponseService.success(res, "Vehicle details found", details);
   } catch (error) {
+    console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
 };
@@ -336,3 +345,59 @@ module.exports.deleteVehicle = async (req, res) => {
     return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
   }
 };
+
+module.exports.makeOffer = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      const { currency, price, vehicleId, whatsapp, call, email } = req.body;
+
+      const token = req.headers["x-access-token"];
+
+      const isTokenValid = await UserServices.validateToken(token);
+      if (isTokenValid?.tokenExpired || !isTokenValid._id)
+        return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
+
+      if (!vehicleId) return ResponseService.failed(res, "id is required", StatusCode.notFound);
+      const isValidId = Types.ObjectId.isValid(vehicleId);
+      if (!isValidId)
+        return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
+
+      const details = await vehiclesModel.findOne({ _id: vehicleId }).populate("user");
+      const user = await UserModel.findOne({ _id: isTokenValid._id });
+
+      if (!user) return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
+      if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
+
+      const mailOptions = {
+        from: "Manish Mittal <devmanishmittal@gmail.com>", // Something like: Jane Doe <janedoe@gmail.com>
+        to: details.user.email,
+        subject: "Autotitanic Post Offer", // email subject
+        html: `<p style="font-size: 16px;">Hello ${details.user.name}
+        <br/>
+      We have Great news
+      <br/><br/>
+      Hurray!! You got an offer on your post at <a href="manishmittal.tech">manishmittal.tech</a>. ${
+        user.name
+      } showed interest in your post and offers ${currency}${price} for your ${details.type.slice(
+          0,
+          -1
+        )}.
+        <br/><br/>
+      You can contact ${user.name} on:<br/>
+      ${email ? "Email: " + user.email : ""}<br/>
+      ${call ? "Call: " + user.mobile : ""}<br/>
+      ${whatsapp ? "Whatsapp: " + user.whatsappNumber : ""}
+      </p>`, // email content in HTML
+      };
+
+      // returning result
+      return transporter.sendMail(mailOptions, (erro, info) => {
+        if (erro) return ResponseService.failed(res, erro.toString(), StatusCode.badRequest);
+        else return ResponseService.success(res, "Offer sent successfully", {});
+      });
+    } catch (error) {
+      console.log("error", error);
+      return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+    }
+  });
+});

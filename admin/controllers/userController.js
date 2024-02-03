@@ -12,9 +12,10 @@ module.exports.allUsers = async (req, res) => {
   }
 
   let users = await User.find(queryObj)
-    .lean()
     .skip((page - 1) * limit)
-    .limit(limit);
+    .limit(limit)
+    .populate("country")
+    .lean();
 
   const usersCount = await User.countDocuments(queryObj);
 

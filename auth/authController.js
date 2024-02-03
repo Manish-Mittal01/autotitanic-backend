@@ -2,33 +2,32 @@ const UserModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
 const otpGenerator = require("otp-generator");
 const functions = require("firebase-functions");
-const nodemailer = require("nodemailer");
 const { StatusCode } = require("../common/Constants");
 const { ResponseService } = require("../common/responseService");
 const { checkRequiredFields } = require("../common/utility");
 const otpModel = require("../Models/otpModel");
 const { UserServices } = require("../services/userServices");
 const cors = require("cors")({ origin: true });
-const jwt = require("jsonwebtoken");
 const compareModel = require("../Models/compareModel");
+const transporter = require("../firebaseConfig");
 
 /**
  * Here we're using Gmail to send
  */
-let transporter = nodemailer.createTransport({
-  service: "gmail",
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: "devmanishmittal@gmail.com",
-    pass: "kzqz wwku cyzp zjjq",
-  },
-});
+// let transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   host: "smtp.gmail.com",
+//   port: 465,
+//   secure: true,
+//   auth: {
+//     user: "devmanishmittal@gmail.com",
+//     pass: "kzqz wwku cyzp zjjq",
+//   },
+// });
 
 module.exports.register = async (req, res) => {
   try {
-    const { name, email, userType, country, mobile, password, image } = req.body;
+    const { name, email, userType, country, mobile, password, image, whatsapp } = req.body;
 
     const validationError = checkRequiredFields({
       name,
@@ -52,6 +51,7 @@ module.exports.register = async (req, res) => {
       userType,
       country,
       mobile,
+      whatsapp,
       // countryCode,
       password,
       dealerLogo: userType === "private" ? "" : image,
@@ -169,13 +169,43 @@ module.exports.resetPassword = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     let newPassword = await bcrypt.hash(password, salt);
     result = await UserModel.updateOne({ email: email }, { password: newPassword });
-    result = {};
 
     const otpDelete = await otpModel.deleteMany({
       email: rightOtpFind.email,
     });
 
     ResponseService.success(res, "Password updated!!");
+  } catch (error) {
+    console.log("error", error);
+    ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+  }
+};
+
+module.exports.changePassword = async (req, res) => {
+  try {
+    const { oldPassword, password } = req.body;
+
+    const validationError = checkRequiredFields({ oldPassword, password });
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
+
+    const token = req.headers["x-access-token"];
+    const isTokenValid = await UserServices.validateToken(token);
+    // console.log("isTokenValid", isTokenValid);
+    if (isTokenValid?.tokenExpired || !isTokenValid._id)
+      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
+
+    const user = await UserModel.findOne({ _id: isTokenValid._id });
+    if (!user) return ResponseService.failed(res, "User not found", StatusCode.badRequest);
+
+    const isPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordCorrect)
+      return ResponseService.failed(res, "incorrect old password", StatusCode.badRequest);
+
+    const salt = await bcrypt.genSalt(10);
+    let newPassword = await bcrypt.hash(password, salt);
+    const result = await UserModel.updateOne({ _id: isTokenValid._id }, { password: newPassword });
+
+    ResponseService.success(res, "Password updated!!", result);
   } catch (error) {
     console.log("error", error);
     ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
@@ -191,7 +221,7 @@ module.exports.getUserProfile = async (req, res) => {
     if (isTokenValid?.tokenExpired || !isTokenValid._id)
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
-    const user = await UserModel.findOne({ _id: isTokenValid._id }).lean();
+    const user = await UserModel.findOne({ _id: isTokenValid._id }).populate("country").lean();
     const compareCount = await compareModel.countDocuments();
 
     if (!user) return ResponseService.failed(res, "User not found", StatusCode.notFound);
@@ -200,5 +230,39 @@ module.exports.getUserProfile = async (req, res) => {
   } catch (error) {
     console.log("error", error);
     ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+  }
+};
+
+module.exports.updateUserProfile = async (req, res) => {
+  try {
+    const { name, email, userType, country, mobile, image, whatsapp, _id } = req.body;
+    const token = req.headers["x-access-token"];
+
+    const isTokenValid = await UserServices.validateToken(token);
+    // console.log("isTokenValid", isTokenValid);
+    if (isTokenValid?.tokenExpired || !isTokenValid._id)
+      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
+
+    const userExist = await UserModel.findOne({ _id });
+
+    if (!userExist) return ResponseService.failed(res, "User not found", StatusCode.notFound);
+
+    const newUser = {
+      name,
+      email,
+      userType,
+      country,
+      mobile,
+      whatsapp,
+      dealerLogo: userType === "private" ? "" : image,
+      userAvatar: userType === "private" ? image : "",
+    };
+
+    const result = await UserModel.updateOne({ _id: _id }, { ...newUser });
+
+    return ResponseService.success(res, "User updated successfully", result);
+  } catch (error) {
+    console.log("error", error?.message);
+    return ResponseService.failed(res, error.message || error);
   }
 };

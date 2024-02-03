@@ -1,3 +1,5 @@
+const nodemailer = require("nodemailer");
+
 const firebaseConfig = {
   apiKey: "AIzaSyBbteKMos6_GSE9FlJmkGtRTSK55NQB--k",
   authDomain: "autotitanic-fde97.firebaseapp.com",
@@ -10,3 +12,16 @@ const firebaseConfig = {
 };
 
 module.exports.firebaseConfig = firebaseConfig;
+
+let transporter = nodemailer.createTransport({
+  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: "devmanishmittal@gmail.com",
+    pass: "kzqz wwku cyzp zjjq",
+  },
+});
+
+module.exports.transporter = transporter;

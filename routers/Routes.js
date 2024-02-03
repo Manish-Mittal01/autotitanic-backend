@@ -7,6 +7,8 @@ const {
   sendOtp,
   resetPassword,
   getUserProfile,
+  updateUserProfile,
+  changePassword,
 } = require("../auth/authController");
 
 //admin import
@@ -45,6 +47,7 @@ const {
   getVehicleDetails,
   updateVehicle,
   deleteVehicle,
+  makeOffer,
 } = require("../user/controllers/vehicleController");
 
 // user import
@@ -79,13 +82,16 @@ const {
 const { uploadMakeAndModel } = require("../common/dataUploadFunctions");
 const { allUsers, blockUser } = require("../admin/controllers/userController");
 
+router.route("/uploadMakeAndModel").get(uploadMakeAndModel);
+
 //auth
 router.route("/login").post(login);
 router.route("/register").post(register);
 router.route("/sendOtp").post(sendOtp);
 router.route("/resetPassword").post(resetPassword);
+router.route("/changePassword").post(changePassword);
 router.route("/getUserProfile").get(getUserProfile);
-router.route("/uploadMakeAndModel").get(uploadMakeAndModel);
+router.route("/updateUserProfile").post(updateUserProfile);
 
 //user
 //filters
@@ -99,9 +105,10 @@ router.route("/allCities/:countryId").get(getAllCities);
 router.route("/getResultCount").post(getResultCount);
 router.route("/allVehicles").post(getAllvehicles);
 router.route("/addVehicle").post(addVehicle);
-router.route("/vehicleDetails/:id").get(getVehicleDetails);
+router.route("/vehicleDetails/:vehicleId").get(getVehicleDetails);
 router.route("/updateVehicle/:id").post(updateVehicle);
 router.route("/deleteVehicle/:id").post(deleteVehicle);
+router.route("/makeOffer").post(makeOffer);
 
 //user compare list
 router.route("/addToCompare").post(addToCompare);
