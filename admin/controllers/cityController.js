@@ -28,13 +28,7 @@ module.exports.getCitiesList = async (req, res) => {
           as: "country",
         },
       },
-      {
-        $unwind: {
-          path: "$country",
-          includeArrayIndex: "0",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      { $unwind: { path: "$country", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
       {
         $match: {
           ...queryObj,
@@ -51,18 +45,32 @@ module.exports.getCitiesList = async (req, res) => {
       },
     ]);
 
-    const totalCount = allCities.length;
+    const totalCount = await cityModel.aggregate([
+      {
+        $lookup: {
+          from: "countries",
+          localField: "country",
+          foreignField: "_id",
+          as: "country",
+        },
+      },
+      { $unwind: { path: "$country", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
+        $group: { _id: null, count: { $sum: 1 } },
+      },
+    ]);
 
     const response = {
       items: allCities,
-      totalCount: totalCount,
+      totalCount: totalCount[0]?.count || 0,
     };
 
-    return ResponseService.success(
-      res,
-      "Cities list found successfully",
-      response
-    );
+    return ResponseService.success(res, "Cities list found successfully", response);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");
@@ -77,8 +85,7 @@ module.exports.addCities = async (req, res) => {
       name,
       country,
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const newCity = { name, country };
     const city = new cityModel(newCity);
@@ -88,11 +95,7 @@ module.exports.addCities = async (req, res) => {
     });
 
     if (isCityExist) {
-      return ResponseService.failed(
-        res,
-        "City with name already exits",
-        StatusCode.forbidden
-      );
+      return ResponseService.failed(res, "City with name already exits", StatusCode.forbidden);
     }
 
     const result = await city.save();
@@ -110,14 +113,9 @@ module.exports.getCityDetails = async (req, res) => {
 
     const cityDetails = await cityModel.findOne({ _id: id });
 
-    if (!cityDetails)
-      return ResponseService.failed(res, "City not found", StatusCode.notFound);
+    if (!cityDetails) return ResponseService.failed(res, "City not found", StatusCode.notFound);
 
-    return ResponseService.success(
-      res,
-      "City details found successfully",
-      cityDetails
-    );
+    return ResponseService.success(res, "City details found successfully", cityDetails);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");
@@ -132,15 +130,13 @@ module.exports.updateCity = async (req, res) => {
       name,
       _id,
     });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isCityExist = await cityModel.findOne({
       _id: _id,
     });
 
-    if (!isCityExist)
-      return ResponseService.failed(res, "City not found", StatusCode.notFound);
+    if (!isCityExist) return ResponseService.failed(res, "City not found", StatusCode.notFound);
 
     const result = await cityModel.updateOne(
       {
@@ -163,15 +159,13 @@ module.exports.deleteCity = async (req, res) => {
     const { cityId } = req.params;
 
     const validationError = checkRequiredFields({ cityId });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const isCityExist = await cityModel.findOne({
       _id: cityId,
     });
 
-    if (!isCityExist)
-      return ResponseService.failed(res, "City not found", StatusCode.notFound);
+    if (!isCityExist) return ResponseService.failed(res, "City not found", StatusCode.notFound);
 
     const result = await cityModel.deleteOne({
       _id: cityId,

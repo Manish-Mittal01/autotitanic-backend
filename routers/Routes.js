@@ -79,10 +79,16 @@ const {
   removewishlistItem,
   getWishlist,
 } = require("../user/controllers/wishlistController");
-const { uploadMakeAndModel } = require("../common/dataUploadFunctions");
+const {
+  uploadMakeAndModel,
+  uploadCountryAndCity,
+  uploadCurrencyAndCode,
+} = require("../common/dataUploadFunctions");
 const { allUsers, blockUser } = require("../admin/controllers/userController");
 
 router.route("/uploadMakeAndModel").get(uploadMakeAndModel);
+router.route("/uploadCountryAndCity").get(uploadCountryAndCity);
+router.route("/uploadCurrencyAndCode").get(uploadCurrencyAndCode);
 
 //auth
 router.route("/login").post(login);

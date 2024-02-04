@@ -72,19 +72,21 @@ module.exports.getAllvehicles = async (req, res) => {
       }
     });
 
+    console.log("filters", filters);
+    console.log("queryObj", queryObj);
+
     queryObj.price = {
       $gte: parseInt(filters.minPrice) || 0,
       $lte: parseInt(filters.maxPrice || 9999999999),
     };
     queryObj.year = {
-      $gte: parseInt(filters.minYear || 2000),
+      $gte: parseInt(filters.minYear || 1930),
       $lte: parseInt(filters.maxYear || new Date().getFullYear()),
     };
     queryObj.mileage = {
       $gte: parseInt(filters.minMileage || 0),
       $lte: parseInt(filters.maxMileage || 999999),
     };
-    // console.log("queryObj", queryObj);
 
     let allVehicles = await vehiclesModel.aggregate([
       {
@@ -217,7 +219,7 @@ const getVehicleCount = async (filters) => {
     $lte: parseInt(filters.maxPrice || 9999999999),
   };
   queryObj.year = {
-    $gte: parseInt(filters.minYear || 2000),
+    $gte: parseInt(filters.minYear || 1930),
     $lte: parseInt(filters.maxYear || new Date().getFullYear()),
   };
   queryObj.mileage = {
