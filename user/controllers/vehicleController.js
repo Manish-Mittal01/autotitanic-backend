@@ -60,7 +60,7 @@ module.exports.getAllvehicles = async (req, res) => {
     const queryObj = {};
     Object.keys(filters).forEach((filter) => {
       const searchValue = filters[filter];
-      if (searchValue && !extraFilters.includes(filter) && !idFilters.includes(filter)) {
+      if (searchValue.toString() && !extraFilters.includes(filter) && !idFilters.includes(filter)) {
         queryObj[filter] =
           typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
       }
