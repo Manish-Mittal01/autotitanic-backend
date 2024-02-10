@@ -17,7 +17,7 @@ module.exports.addToCompare = async (req, res) => {
     const validationError = checkRequiredFields({ vehicle });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const isVehicleExist = await compareModel.findOne({ vehicle });
+    const isVehicleExist = await compareModel.findOne({ vehicle, user: isTokenValid._id });
     if (isVehicleExist)
       return ResponseService.failed(res, "Vehicle already exist", StatusCode.forbidden);
 
