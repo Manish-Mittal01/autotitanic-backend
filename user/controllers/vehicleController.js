@@ -32,7 +32,7 @@ module.exports.addVehicle = async (req, res) => {
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    console.log("media", media);
+    // console.log("media", media);
 
     if (media.length < 5)
       return ResponseService.failed(res, "Atleast 5 images required", StatusCode.badRequest);
@@ -72,9 +72,6 @@ module.exports.getAllvehicles = async (req, res) => {
       }
     });
 
-    console.log("filters", filters);
-    console.log("queryObj", queryObj);
-
     queryObj.price = {
       $gte: parseInt(filters.minPrice) || 0,
       $lte: parseInt(filters.maxPrice || 9999999999),
@@ -87,6 +84,9 @@ module.exports.getAllvehicles = async (req, res) => {
       $gte: parseInt(filters.minMileage || 0),
       $lte: parseInt(filters.maxMileage || 999999),
     };
+
+    // console.log("filters", filters);
+    // console.log("queryObj", queryObj);
 
     let allVehicles = await vehiclesModel.aggregate([
       {

@@ -222,7 +222,7 @@ module.exports.getUserProfile = async (req, res) => {
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
     const user = await UserModel.findOne({ _id: isTokenValid._id }).populate("country").lean();
-    const compareCount = await compareModel.countDocuments();
+    const compareCount = await compareModel.countDocuments({ user: isTokenValid._id });
 
     if (!user) return ResponseService.failed(res, "User not found", StatusCode.notFound);
 
