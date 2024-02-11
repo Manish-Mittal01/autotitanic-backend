@@ -50,7 +50,7 @@ module.exports.addVehicle = async (req, res) => {
 
 module.exports.getAllvehicles = async (req, res) => {
   try {
-    let { filters = {}, paginationDetails } = req.body;
+    let { filters = {}, paginationDetails, listType } = req.body;
     paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
     const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
@@ -71,6 +71,10 @@ module.exports.getAllvehicles = async (req, res) => {
         queryObj[`${filter}._id`] = Types.ObjectId(filters[filter]);
       }
     });
+    // listType
+    if (listType === "admin" && !filters.status) {
+      queryObj.status = { $ne: "draft" };
+    }
 
     queryObj.price = {
       $gte: parseInt(filters.minPrice) || 0,
@@ -86,7 +90,7 @@ module.exports.getAllvehicles = async (req, res) => {
     };
 
     // console.log("filters", filters);
-    // console.log("queryObj", queryObj);
+    // console.log("queryObj1", queryObj);
 
     let allVehicles = await vehiclesModel.aggregate([
       {
@@ -144,16 +148,17 @@ module.exports.getAllvehicles = async (req, res) => {
       },
       { $unwind: { path: "$user", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
       {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
         $skip: (Number(paginationDetails.page) - 1) * paginationDetails.limit,
       },
       {
         $limit: paginationDetails.limit,
       },
-      {
-        $match: {
-          ...queryObj,
-        },
-      },
+
       {
         $sort: paginationDetails.sortBy
           ? { [paginationDetails.sortBy]: paginationDetails.order }
@@ -226,6 +231,11 @@ const getVehicleCount = async (filters) => {
     $gte: parseInt(filters.minMileage || 0),
     $lte: parseInt(filters.maxMileage || 999999),
   };
+
+  if (!filters.user && !filters.status) {
+    queryObj.status = { $ne: "draft" };
+  }
+
   // console.log("queryObj", queryObj);
 
   const allVehiclesCount = await vehiclesModel.aggregate([
