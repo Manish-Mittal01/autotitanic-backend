@@ -48,6 +48,7 @@ const {
   updateVehicle,
   deleteVehicle,
   makeOffer,
+  getResultCountByFilter,
 } = require("../user/controllers/vehicleController");
 
 // user import
@@ -109,6 +110,7 @@ router.route("/allCities/:countryId").get(getAllCities);
 
 //vehicle
 router.route("/getResultCount").post(getResultCount);
+router.route("/getResultCountByFilter").post(getResultCountByFilter);
 router.route("/allVehicles").post(getAllvehicles);
 router.route("/addVehicle").post(addVehicle);
 router.route("/vehicleDetails/:vehicleId").get(getVehicleDetails);

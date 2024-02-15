@@ -169,7 +169,6 @@ module.exports.getAllvehicles = async (req, res) => {
     // console.log("allVehicles", allVehicles);
 
     const vehicleCount = await getVehicleCount(queryObj);
-
     const response = {
       items: allVehicles,
       totalCount: vehicleCount,
@@ -199,6 +198,32 @@ module.exports.getResultCount = async (req, res) => {
   }
 };
 
+module.exports.getResultCountByFilter = async (req, res) => {
+  try {
+    let { filters } = req.body;
+
+    const result = {};
+    const filterKeys = Object.keys(filters);
+
+    for (let i in filterKeys) {
+      let filterKey = filterKeys[i];
+      for (let filterValue of filters[filterKey]) {
+        const vehicleCount = await getVehicleCount({ [filterKey]: filterValue });
+
+        result[filterKey] = [
+          ...(result[filterKey] || []),
+          { value: filterValue, count: vehicleCount },
+        ];
+      }
+    }
+
+    return ResponseService.success(res, "Count successful", result);
+  } catch (error) {
+    console.log("error", error);
+    return ResponseService.failed(res, "Something wrong happened");
+  }
+};
+
 const getVehicleCount = async (filters) => {
   const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
   const idFilters = ["make", "model", "city", "country"];
@@ -219,23 +244,30 @@ const getVehicleCount = async (filters) => {
     }
   });
 
-  queryObj.price = {
-    $gte: parseInt(filters.minPrice) || 0,
-    $lte: parseInt(filters.maxPrice || 9999999999),
-  };
-  queryObj.year = {
-    $gte: parseInt(filters.minYear || 1930),
-    $lte: parseInt(filters.maxYear || new Date().getFullYear()),
-  };
-  queryObj.mileage = {
-    $gte: parseInt(filters.minMileage || 0),
-    $lte: parseInt(filters.maxMileage || 999999),
-  };
+  if (!filters.price) {
+    queryObj.price = {
+      $gte: parseInt(filters.minPrice) || 0,
+      $lte: parseInt(filters.maxPrice || 9999999999),
+    };
+  }
+  if (!filters.year) {
+    queryObj.year = {
+      $gte: parseInt(filters.minYear || 1930),
+      $lte: parseInt(filters.maxYear || new Date().getFullYear()),
+    };
+  }
+  if (!filters.mileage) {
+    queryObj.mileage = {
+      $gte: parseInt(filters.minMileage || 0),
+      $lte: parseInt(filters.maxMileage || 999999),
+    };
+  }
 
   if (!filters.user && !filters.status) {
     queryObj.status = { $ne: "draft" };
   }
 
+  // console.log("filters", filters);
   // console.log("queryObj", queryObj);
 
   const allVehiclesCount = await vehiclesModel.aggregate([
