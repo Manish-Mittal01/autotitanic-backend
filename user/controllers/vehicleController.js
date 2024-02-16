@@ -60,7 +60,12 @@ module.exports.getAllvehicles = async (req, res) => {
     const queryObj = {};
     Object.keys(filters).forEach((filter) => {
       const searchValue = filters[filter];
-      if (searchValue.toString() && !extraFilters.includes(filter) && !idFilters.includes(filter)) {
+      if (
+        searchValue.toString() &&
+        !extraFilters.includes(filter) &&
+        !idFilters.includes(filter) &&
+        filter !== "userType"
+      ) {
         queryObj[filter] =
           typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
       }
@@ -74,6 +79,10 @@ module.exports.getAllvehicles = async (req, res) => {
     // listType
     if (listType === "admin" && !filters.status) {
       queryObj.status = { $ne: "draft" };
+    }
+    // userType
+    if (filters.userType) {
+      queryObj[`user.userType`] = { $regex: filters.userType, $options: "i" };
     }
 
     queryObj.price = {
@@ -168,7 +177,7 @@ module.exports.getAllvehicles = async (req, res) => {
 
     // console.log("allVehicles", allVehicles);
 
-    const vehicleCount = await getVehicleCount(queryObj);
+    const vehicleCount = await getVehicleCount(filters);
     const response = {
       items: allVehicles,
       totalCount: vehicleCount,
@@ -232,7 +241,12 @@ const getVehicleCount = async (filters) => {
   const queryObj = {};
   Object.keys(filters).forEach((filter) => {
     const searchValue = filters[filter];
-    if (searchValue && !extraFilters.includes(filter) && !idFilters.includes(filter)) {
+    if (
+      searchValue &&
+      !extraFilters.includes(filter) &&
+      !idFilters.includes(filter) &&
+      filter !== "userType"
+    ) {
       queryObj[filter] =
         typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
     }
@@ -267,8 +281,12 @@ const getVehicleCount = async (filters) => {
     queryObj.status = { $ne: "draft" };
   }
 
+  if (filters.userType) {
+    queryObj[`user.userType`] = { $regex: filters.userType, $options: "i" };
+  }
+
   // console.log("filters", filters);
-  // console.log("queryObj", queryObj);
+  // console.log("queryObj1", queryObj);
 
   const allVehiclesCount = await vehiclesModel.aggregate([
     {
@@ -316,6 +334,15 @@ const getVehicleCount = async (filters) => {
     //   },
     // },
     // { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+    {
+      $lookup: {
+        from: "users",
+        localField: "user",
+        foreignField: "_id",
+        as: "user",
+      },
+    },
+    { $unwind: { path: "$user", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
     {
       $match: {
         ...queryObj,
