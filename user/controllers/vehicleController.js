@@ -162,16 +162,15 @@ module.exports.getAllvehicles = async (req, res) => {
         },
       },
       {
+        $sort: paginationDetails.sortBy
+          ? { [paginationDetails.sortBy]: paginationDetails.order }
+          : { _id: 1 },
+      },
+      {
         $skip: (Number(paginationDetails.page) - 1) * paginationDetails.limit,
       },
       {
         $limit: paginationDetails.limit,
-      },
-
-      {
-        $sort: paginationDetails.sortBy
-          ? { [paginationDetails.sortBy]: paginationDetails.order }
-          : { _id: 1 },
       },
     ]);
 
@@ -367,8 +366,10 @@ module.exports.getVehicleDetails = async (req, res) => {
 
     const details = await vehiclesModel
       .findOne({ _id: vehicleId })
-      .populate("make model country city user");
-    // .populate("make model variant country city user");
+      .populate([
+        { path: "make model country city" },
+        { path: "user", populate: { path: "country" } },
+      ]);
 
     if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
 
@@ -449,15 +450,15 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
       <br/><br/>
       Hurray!! You got an offer on your post at <a href="manishmittal.tech">manishmittal.tech</a>. ${
         user.name
-      } showed interest in your post and offers ${currency}${price} for your ${details.type.slice(
+      } showed interest in your post and offers ${currency} ${price} for your ${details.type.slice(
           0,
           -1
         )}.
         <br/><br/>
       You can contact ${user.name} on:<br/>
-      ${email ? "Email: " + user.email : ""}<br/>
-      ${call ? "Call: " + user.mobile : ""}<br/>
-      ${whatsapp ? "Whatsapp: " + user.whatsappNumber : ""}
+      ${email && user.email ? "Email: " + user.email : ""}<br/>
+      ${call && user.mobile ? "Call: " + user.mobile : ""}<br/>
+      ${whatsapp && user.whatsapp ? "Whatsapp: " + user.whatsapp : ""}
       </p>`, // email content in HTML
       };
 
