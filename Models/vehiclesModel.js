@@ -13,7 +13,7 @@ const vehicleSchema = Schema(
     },
     condition: {
       type: String,
-      required: true,
+      // required: true,
     },
     co2Emission: {
       type: String,
@@ -34,7 +34,7 @@ const vehicleSchema = Schema(
     },
     description: {
       type: String,
-      required: true,
+      // required: true,
     },
     door: {
       type: Number,
@@ -86,7 +86,7 @@ const vehicleSchema = Schema(
     },
     price: {
       type: Number,
-      required: true,
+      // required: true,
     },
     rating: {
       type: String,
@@ -118,7 +118,7 @@ const vehicleSchema = Schema(
     },
     title: {
       type: String,
-      required: true,
+      // required: true,
     },
     user: {
       type: Schema.Types.ObjectId,

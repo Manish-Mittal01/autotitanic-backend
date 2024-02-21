@@ -86,6 +86,10 @@ const {
   uploadCurrencyAndCode,
 } = require("../common/dataUploadFunctions");
 const { allUsers, blockUser } = require("../admin/controllers/userController");
+const {
+  getUserAnalytics,
+  getVehicleAnalytics,
+} = require("../admin/controllers/analyticsController");
 
 router.route("/uploadMakeAndModel").get(uploadMakeAndModel);
 router.route("/uploadCountryAndCity").get(uploadCountryAndCity);
@@ -167,6 +171,10 @@ router.route("/deleteCity/:cityId").delete(deleteCity);
 // users
 router.route("/allUsers").post(allUsers);
 router.route("/userStatus").post(blockUser);
+
+//analytics
+router.route("/getUserAnalytics/:filterType").get(getUserAnalytics);
+router.route("/getVehicleAnalytics/:filterType").get(getVehicleAnalytics);
 
 //content-page
 router.route("/updateContentPage").post(updateContentPage);

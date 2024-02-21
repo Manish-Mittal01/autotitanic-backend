@@ -20,14 +20,14 @@ module.exports.addVehicle = async (req, res) => {
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
     const validationError = checkRequiredFields({
-      condition,
-      country,
-      city,
-      title,
-      description,
-      media,
-      price,
-      currency,
+      // condition,
+      // country,
+      // city,
+      // title,
+      // description,
+      // media,
+      // price,
+      // currency,
       type,
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
@@ -85,21 +85,27 @@ module.exports.getAllvehicles = async (req, res) => {
       queryObj[`user.userType`] = { $regex: filters.userType, $options: "i" };
     }
 
-    queryObj.price = {
-      $gte: parseInt(filters.minPrice) || 0,
-      $lte: parseInt(filters.maxPrice || 9999999999),
-    };
-    queryObj.year = {
-      $gte: parseInt(filters.minYear || 1930),
-      $lte: parseInt(filters.maxYear || new Date().getFullYear()),
-    };
-    queryObj.mileage = {
-      $gte: parseInt(filters.minMileage || 0),
-      $lte: parseInt(filters.maxMileage || 999999),
-    };
+    if (filters.minPrice || filters.maxPrice) {
+      queryObj.price = {
+        $gte: parseInt(filters.minPrice) || 0,
+        $lte: parseInt(filters.maxPrice || 9999999999),
+      };
+    }
+    if (filters.minYear || filters.maxYear) {
+      queryObj.year = {
+        $gte: parseInt(filters.minYear || 1930),
+        $lte: parseInt(filters.maxYear || new Date().getFullYear()),
+      };
+    }
+    if (filters.minMileage || filters.maxMileage) {
+      queryObj.mileage = {
+        $gte: parseInt(filters.minMileage || 0),
+        $lte: parseInt(filters.maxMileage || 999999),
+      };
+    }
 
     // console.log("filters", filters);
-    // console.log("queryObj1", queryObj);
+    console.log("queryObj1", queryObj);
 
     let allVehicles = await vehiclesModel.aggregate([
       {
@@ -234,7 +240,7 @@ module.exports.getResultCountByFilter = async (req, res) => {
 
 const getVehicleCount = async (filters) => {
   const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
-  const idFilters = ["make", "model", "city", "country"];
+  const idFilters = ["make", "model", "city", "country", "user"];
   // const idFilters = ["make", "model", "variant", "city", "country"];
 
   const queryObj = {};
