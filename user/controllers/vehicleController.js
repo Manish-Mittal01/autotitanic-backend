@@ -105,7 +105,8 @@ module.exports.getAllvehicles = async (req, res) => {
     }
 
     // console.log("filters", filters);
-    console.log("queryObj1", queryObj);
+    // console.log("queryObj1", queryObj);
+    // console.log("paginationDetails", paginationDetails);
 
     let allVehicles = await vehiclesModel.aggregate([
       {

@@ -8,7 +8,7 @@ const makeSchema = Schema(
     },
     logo: {
       type: String,
-      required: true,
+      // required: true,
     },
     type: {
       type: [String],

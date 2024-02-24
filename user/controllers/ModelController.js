@@ -6,13 +6,13 @@ const { checkRequiredFields } = require("../../common/utility");
 module.exports.getAllModel = async (req, res) => {
   try {
     const { makeId } = req.params;
+    const { type } = req.query;
 
     const validationError = checkRequiredFields({ makeId });
-    if (validationError)
-      return ResponseService.failed(res, validationError, StatusCode.notFound);
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const allModel = await allModels
-      .find({ make: makeId }, null, {
+      .find({ make: makeId, type: type || "cars" }, null, {
         sort: { label: 1 },
       })
       .lean();
@@ -24,11 +24,7 @@ module.exports.getAllModel = async (req, res) => {
       totalCount: totalCount,
     };
 
-    return ResponseService.success(
-      res,
-      "Model list found successfully",
-      response
-    );
+    return ResponseService.success(res, "Model list found successfully", response);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend");

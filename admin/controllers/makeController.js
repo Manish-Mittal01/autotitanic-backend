@@ -23,7 +23,7 @@ module.exports.getMakeList = async (req, res) => {
       })
       .lean();
 
-    const totalCount = await makeModel.count();
+    const totalCount = await makeModel.count(queryObj);
 
     const response = {
       items: allMake,

@@ -7,10 +7,56 @@ const { makeAndModels } = require("./jsonData");
 const { countryAndCity } = require("./jsonData");
 const { currencyAndCode } = require("./jsonData");
 const cityModel = require("../Models/cityModel");
+const vehiclesModel = require("../Models/vehiclesModel");
 
-module.exports.uploadMakeAndModel = async (req, res) => {
+module.exports.uploadMake = async (req, res) => {
   try {
     const allMake = await makeModel.find().lean();
+
+    //   Person.update({'items.id': 2}, {'$set': {
+    //     'items.$.name': 'updated item2',
+    //     'items.$.value': 'two updated'
+    // }},
+
+    const makes = Object.keys(makeAndModels);
+    console.log("makes", makes, makes.length);
+    for (let make of makes) {
+      const myMake = allMake.find((oldMake) => oldMake.label === make);
+
+      if (myMake) {
+        const result = await makeModel.update({ _id: myMake._id }, { $push: { type: "bikes" } });
+      } else {
+        const label = make.toString();
+        const type = ["bikes"];
+
+        const newMake = { label, type };
+        const verifiedMake = new makeModel(newMake);
+
+        const result = await verifiedMake.save();
+      }
+    }
+
+    const updatedMakes = await makeModel.find({ type: "bikes" }).lean();
+
+    return ResponseService.success(res, "Updated", {
+      items: updatedMakes,
+      count: updatedMakes.length,
+    });
+  } catch (error) {
+    console.log("error", error);
+  }
+};
+
+module.exports.uploadModel = async (req, res) => {
+  try {
+    const allMake = await makeModel.find({ type: "bikes" }).lean();
+
+    //   Person.update({'items.id': 2}, {'$set': {
+    //     'items.$.name': 'updated item2',
+    //     'items.$.value': 'two updated'
+    // }},
+
+    // PersonModel.update({ _id: person._id }, { $push: { friends: friend } }, done);
 
     const makes = Object.keys(makeAndModels);
     for (let make of makes) {
@@ -21,23 +67,22 @@ module.exports.uploadMakeAndModel = async (req, res) => {
           const makeId = myMake?._id;
           const label = model.toString();
 
-          const newModel = { label, make: makeId };
-          const mymodel = new allModels(newModel);
-
-          const isModelExist = await allModels.findOne({
-            label: label,
-            make: makeId,
-          });
-
-          if (!isModelExist) {
-            const result = await mymodel.save();
+          const myModel = await allModels.findOne({ label: label, make: makeId });
+          if (myModel) {
+            console.log("Model exist", myModel);
           } else {
+            const newModel = { label, make: makeId, type: ["bikes"] };
+            const mymodel = new allModels(newModel);
+
+            const result = await mymodel.save();
           }
         }
+      } else {
+        console.log("make", make);
       }
     }
 
-    const allModel = await allModels.find().lean().populate("make");
+    const allModel = await allModels.find().lean();
     const allModelCount = await allModels.countDocuments();
 
     // console.log("allMake", allMake);
@@ -111,5 +156,22 @@ module.exports.uploadCurrencyAndCode = async (req, res) => {
     return ResponseService.success(res, "Updated", { items: countriesLst });
   } catch (error) {
     console.log("error", error);
+  }
+};
+
+module.exports.updateData = async (req, res) => {
+  try {
+    // const allVehicles = await vehiclesModel.find({ status: "approve" });
+
+    const result = await vehiclesModel.updateMany({ status: "approve" }, { status: "approved" });
+
+    const allVehicles = await vehiclesModel.find({ status: "approve" });
+
+    console.log("allVehicles", allVehicles);
+
+    return ResponseService.success(res, result, StatusCode.success);
+  } catch (error) {
+    console.log("error", error);
+    return ResponseService.failed(res, error.message, StatusCode.srevrError);
   }
 };

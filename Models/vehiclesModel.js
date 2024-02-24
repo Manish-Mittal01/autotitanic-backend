@@ -11,9 +11,11 @@ const vehicleSchema = Schema(
     bootSpace: {
       type: String,
     },
+    cabType: {
+      type: String,
+    },
     condition: {
       type: String,
-      // required: true,
     },
     co2Emission: {
       type: String,
@@ -43,6 +45,9 @@ const vehicleSchema = Schema(
       type: String,
     },
     engineSize: {
+      type: String,
+    },
+    enginePower: {
       type: String,
     },
     exteriorColor: {
@@ -129,6 +134,9 @@ const vehicleSchema = Schema(
     //   type: Schema.Types.ObjectId,
     //   ref: "variants",
     // },
+    wheelBase: {
+      type: String,
+    },
     year: {
       type: Number,
     },

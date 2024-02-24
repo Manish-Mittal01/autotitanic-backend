@@ -81,9 +81,11 @@ const {
   getWishlist,
 } = require("../user/controllers/wishlistController");
 const {
-  uploadMakeAndModel,
+  uploadMake,
   uploadCountryAndCity,
   uploadCurrencyAndCode,
+  updateData,
+  uploadModel,
 } = require("../common/dataUploadFunctions");
 const { allUsers, blockUser } = require("../admin/controllers/userController");
 const {
@@ -91,9 +93,11 @@ const {
   getVehicleAnalytics,
 } = require("../admin/controllers/analyticsController");
 
-router.route("/uploadMakeAndModel").get(uploadMakeAndModel);
+router.route("/uploadMake").get(uploadMake);
+router.route("/uploadModel").get(uploadModel);
 router.route("/uploadCountryAndCity").get(uploadCountryAndCity);
 router.route("/uploadCurrencyAndCode").get(uploadCurrencyAndCode);
+router.route("/updateData").get(updateData);
 
 //auth
 router.route("/login").post(login);
