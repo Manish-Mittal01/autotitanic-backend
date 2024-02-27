@@ -110,6 +110,11 @@ module.exports.getAllvehicles = async (req, res) => {
 
     let allVehicles = await vehiclesModel.aggregate([
       {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
         $lookup: {
           from: "countries",
           localField: "country",
@@ -164,11 +169,6 @@ module.exports.getAllvehicles = async (req, res) => {
       },
       { $unwind: { path: "$user", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
       {
-        $match: {
-          ...queryObj,
-        },
-      },
-      {
         $sort: paginationDetails.sortBy
           ? { [paginationDetails.sortBy]: paginationDetails.order }
           : { _id: 1 },
@@ -220,16 +220,26 @@ module.exports.getResultCountByFilter = async (req, res) => {
     const result = {};
     const filterKeys = Object.keys(filters);
 
-    for (let i in filterKeys) {
-      let filterKey = filterKeys[i];
-      for (let filterValue of filters[filterKey]) {
-        const vehicleCount = await getVehicleCount({ [filterKey]: filterValue });
+    // for (let i in filterKeys) {
+    //   let filterKey = filterKeys[i];
 
-        result[filterKey] = [
-          ...(result[filterKey] || []),
-          { value: filterValue, count: vehicleCount },
-        ];
-      }
+    //   for (let filterValue of filters[filterKey]) {
+    //     const vehicleCount = await getVehicleCount({ [filterKey]: filterValue });
+
+    //     result[filterKey] = [
+    //       ...(result[filterKey] || []),
+    //       { value: filterValue, count: vehicleCount },
+    //     ];
+    //   }
+    // }
+
+    for (let filterValue of filters.bodyStyle) {
+      const vehicleCount = await getVehicleCount({
+        bodyStyle: filterValue,
+        type: filters.type || "cars",
+      });
+
+      result.bodyStyle = [...(result.bodyStyle || []), { value: filterValue, count: vehicleCount }];
     }
 
     return ResponseService.success(res, "Count successful", result);

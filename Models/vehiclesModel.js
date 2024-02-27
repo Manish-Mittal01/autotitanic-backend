@@ -48,7 +48,7 @@ const vehicleSchema = Schema(
       type: String,
     },
     enginePower: {
-      type: String,
+      type: Number,
     },
     exteriorColor: {
       type: String,
