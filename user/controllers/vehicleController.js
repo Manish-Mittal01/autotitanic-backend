@@ -8,6 +8,7 @@ const { StatusCode } = require("../../common/Constants");
 const vehiclesModel = require("../../Models/vehiclesModel");
 const { UserServices } = require("../../services/userServices");
 const UserModel = require("../../Models/UserModel");
+const cityModel = require("../../Models/cityModel");
 
 module.exports.addVehicle = async (req, res) => {
   try {
@@ -37,8 +38,32 @@ module.exports.addVehicle = async (req, res) => {
     if (media.length < 5)
       return ResponseService.failed(res, "Atleast 5 images required", StatusCode.badRequest);
 
-    const newVehicle = { ...req.body, user: isTokenValid._id };
+    let myCity = "";
+
+    if (Types.ObjectId.isValid(city)) {
+      myCity = city;
+    } else {
+      const isCityExist = await cityModel.findOne({
+        name: city,
+      });
+
+      if (isCityExist) {
+        myCity = isCityExist._id;
+      } else {
+        const newCity = { name: city, country, isUserCreated: true };
+        const validCity = new cityModel(newCity);
+        const result = await validCity.save();
+        myCity = result._id;
+      }
+    }
+
+    const newVehicle = {
+      ...req.body,
+      user: isTokenValid._id,
+      city: myCity,
+    };
     const vehicle = new vehiclesModel(newVehicle);
+
     const result = await vehicle.save();
 
     return ResponseService.success(res, `${req.body.type} added successfully`, result);

@@ -11,6 +11,10 @@ const citySchema = Schema(
       type: String,
       required: true,
     },
+    isUserCreated: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true, versionKey: false }
 );

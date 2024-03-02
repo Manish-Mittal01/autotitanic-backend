@@ -7,7 +7,7 @@ module.exports.getCitiesList = async (req, res) => {
   try {
     const { page = 1, limit = 10, search } = req.body;
 
-    let queryObj = {};
+    let queryObj = { isUserCreated: false };
     if (search) {
       queryObj["$or"] = [
         {
@@ -21,6 +21,11 @@ module.exports.getCitiesList = async (req, res) => {
 
     const allCities = await cityModel.aggregate([
       {
+        $match: {
+          ...queryObj,
+        },
+      },
+      {
         $lookup: {
           from: "countries",
           localField: "country",
@@ -30,18 +35,13 @@ module.exports.getCitiesList = async (req, res) => {
       },
       { $unwind: { path: "$country", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
       {
-        $match: {
-          ...queryObj,
-        },
-      },
-      {
-        $sort: { name: 1 },
-      },
-      {
         $skip: (Number(page) - 1) * limit,
       },
       {
         $limit: limit,
+      },
+      {
+        $sort: { name: 1 },
       },
     ]);
 
@@ -94,11 +94,18 @@ module.exports.addCities = async (req, res) => {
       name,
     });
 
-    if (isCityExist) {
-      return ResponseService.failed(res, "City with name already exits", StatusCode.forbidden);
-    }
+    let result = {};
 
-    const result = await city.save();
+    if (isCityExist && !isCityExist.isUserCreated) {
+      return ResponseService.failed(res, "City with name already exits", StatusCode.forbidden);
+    } else if (isCityExist && isCityExist.isUserCreated) {
+      result = await cityModel.updateOne(
+        { _id: isCityExist._id },
+        { $set: { isUserCreated: false } }
+      );
+    } else if (!isCityExist) {
+      result = await city.save();
+    }
 
     return ResponseService.success(res, "City added successfully", result);
   } catch (error) {
@@ -138,14 +145,7 @@ module.exports.updateCity = async (req, res) => {
 
     if (!isCityExist) return ResponseService.failed(res, "City not found", StatusCode.notFound);
 
-    const result = await cityModel.updateOne(
-      {
-        _id: _id,
-      },
-      {
-        $set: { name },
-      }
-    );
+    const result = await cityModel.updateOne({ _id: _id }, { $set: { name } });
 
     return ResponseService.success(res, "City updated successfully", result);
   } catch (error) {
