@@ -130,15 +130,10 @@ module.exports.getAllvehicles = async (req, res) => {
     }
 
     // console.log("filters", filters);
-    // console.log("queryObj1", queryObj);
+    console.log("queryObj1", queryObj);
     // console.log("paginationDetails", paginationDetails);
 
     let allVehicles = await vehiclesModel.aggregate([
-      {
-        $match: {
-          ...queryObj,
-        },
-      },
       {
         $lookup: {
           from: "countries",
@@ -193,6 +188,11 @@ module.exports.getAllvehicles = async (req, res) => {
         },
       },
       { $unwind: { path: "$user", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          ...queryObj,
+        },
+      },
       {
         $sort: paginationDetails.sortBy
           ? { [paginationDetails.sortBy]: paginationDetails.order }

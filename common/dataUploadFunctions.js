@@ -19,15 +19,18 @@ module.exports.uploadMake = async (req, res) => {
     // }},
 
     const makes = Object.keys(makeAndModels);
-    console.log("makes", makes, makes.length);
+
     for (let make of makes) {
       const myMake = allMake.find((oldMake) => oldMake.label === make);
 
       if (myMake) {
-        const result = await makeModel.update({ _id: myMake._id }, { $push: { type: "bikes" } });
+        const result = await makeModel.update(
+          { _id: myMake._id },
+          { $push: { type: "motorhomes" } }
+        );
       } else {
         const label = make.toString();
-        const type = ["bikes"];
+        const type = ["motorhomes"];
 
         const newMake = { label, type };
         const verifiedMake = new makeModel(newMake);
@@ -36,7 +39,7 @@ module.exports.uploadMake = async (req, res) => {
       }
     }
 
-    const updatedMakes = await makeModel.find({ type: "bikes" }).lean();
+    const updatedMakes = await makeModel.find({ type: "motorhomes" }).lean();
 
     return ResponseService.success(res, "Updated", {
       items: updatedMakes,
@@ -49,7 +52,7 @@ module.exports.uploadMake = async (req, res) => {
 
 module.exports.uploadModel = async (req, res) => {
   try {
-    const allMake = await makeModel.find({ type: "bikes" }).lean();
+    const allMake = await makeModel.find({ type: "motorhomes" }).lean();
 
     //   Person.update({'items.id': 2}, {'$set': {
     //     'items.$.name': 'updated item2',
@@ -59,6 +62,7 @@ module.exports.uploadModel = async (req, res) => {
     // PersonModel.update({ _id: person._id }, { $push: { friends: friend } }, done);
 
     const makes = Object.keys(makeAndModels);
+
     for (let make of makes) {
       const myMake = allMake.find((oldMake) => oldMake.label === make);
 
@@ -71,19 +75,19 @@ module.exports.uploadModel = async (req, res) => {
           if (myModel) {
             console.log("Model exist", myModel);
           } else {
-            const newModel = { label, make: makeId, type: ["bikes"] };
+            const newModel = { label, make: makeId, type: ["motorhomes"] };
             const mymodel = new allModels(newModel);
 
             const result = await mymodel.save();
           }
         }
       } else {
-        console.log("make", make);
+        console.log("make not found", make);
       }
     }
 
-    const allModel = await allModels.find().lean();
-    const allModelCount = await allModels.countDocuments();
+    const allModel = await allModels.find({ type: "motorhomes" }).lean();
+    const allModelCount = await allModels.countDocuments({ type: "motorhomes" });
 
     // console.log("allMake", allMake);
 
