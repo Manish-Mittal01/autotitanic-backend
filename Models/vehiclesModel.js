@@ -5,6 +5,15 @@ const vehicleSchema = Schema(
     accelration: {
       type: String,
     },
+    axle: {
+      type: String,
+    },
+    bedroomLayout: {
+      type: String,
+    },
+    birth: {
+      type: Number,
+    },
     bodyStyle: {
       type: String,
     },
@@ -12,6 +21,9 @@ const vehicleSchema = Schema(
       type: String,
     },
     cabType: {
+      type: String,
+    },
+    category: {
       type: String,
     },
     condition: {
@@ -44,6 +56,9 @@ const vehicleSchema = Schema(
     driverPosition: {
       type: String,
     },
+    endLayout: {
+      type: String,
+    },
     engineSize: {
       type: String,
     },
@@ -53,14 +68,23 @@ const vehicleSchema = Schema(
     exteriorColor: {
       type: String,
     },
+    farmsUsedHours: {
+      type: Number,
+    },
     fuelType: {
       type: String,
     },
-    // fuelConsumption: {
-    //   type: String,
-    // },
+    fuelConsumption: {
+      type: String,
+    },
     gearBox: {
       type: String,
+    },
+    gtw: {
+      type: Number,
+    },
+    gvw: {
+      type: Number,
     },
     interiorColor: {
       type: String,
@@ -73,6 +97,9 @@ const vehicleSchema = Schema(
     kmDriven: {
       type: String,
     },
+    length: {
+      type: Number,
+    },
     make: {
       type: Schema.Types.ObjectId,
       ref: "makes",
@@ -82,16 +109,22 @@ const vehicleSchema = Schema(
       required: true,
       default: [],
     },
+    mileage: {
+      type: Number,
+    },
     model: {
       type: Schema.Types.ObjectId,
       ref: "models",
     },
-    mileage: {
+    mtplm: {
       type: Number,
     },
     price: {
       type: Number,
       // required: true,
+    },
+    priceType: {
+      type: String,
     },
     rating: {
       type: String,
@@ -101,7 +134,7 @@ const vehicleSchema = Schema(
       default: [],
     },
     seat: {
-      type: String,
+      type: Number,
     },
     sellOrRent: {
       type: String,
@@ -115,8 +148,14 @@ const vehicleSchema = Schema(
       default: "pending",
       enum: ["pending", "approved", "rejected", "deleted", "draft"],
     },
+    subCategory: {
+      type: String,
+    },
 
     // vehicle type
+    truckCategory: {
+      type: String,
+    },
     type: {
       type: String,
       required: true,

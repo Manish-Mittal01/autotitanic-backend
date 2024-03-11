@@ -24,13 +24,13 @@ module.exports.uploadMake = async (req, res) => {
       const myMake = allMake.find((oldMake) => oldMake.label === make);
 
       if (myMake) {
-        const result = await makeModel.update(
+        const result = await makeModel.updateOne(
           { _id: myMake._id },
-          { $push: { type: "motorhomes" } }
+          { $push: { type: "plants" } }
         );
       } else {
         const label = make.toString();
-        const type = ["motorhomes"];
+        const type = ["plants"];
 
         const newMake = { label, type };
         const verifiedMake = new makeModel(newMake);
@@ -39,7 +39,7 @@ module.exports.uploadMake = async (req, res) => {
       }
     }
 
-    const updatedMakes = await makeModel.find({ type: "motorhomes" }).lean();
+    const updatedMakes = await makeModel.find({ type: "plants" }).lean();
 
     return ResponseService.success(res, "Updated", {
       items: updatedMakes,
@@ -52,7 +52,7 @@ module.exports.uploadMake = async (req, res) => {
 
 module.exports.uploadModel = async (req, res) => {
   try {
-    const allMake = await makeModel.find({ type: "motorhomes" }).lean();
+    const allMake = await makeModel.find({ type: "plants" }).lean();
 
     //   Person.update({'items.id': 2}, {'$set': {
     //     'items.$.name': 'updated item2',
@@ -72,22 +72,25 @@ module.exports.uploadModel = async (req, res) => {
           const label = model.toString();
 
           const myModel = await allModels.findOne({ label: label, make: makeId });
-          if (myModel) {
-            console.log("Model exist", myModel);
-          } else {
-            const newModel = { label, make: makeId, type: ["motorhomes"] };
-            const mymodel = new allModels(newModel);
 
-            const result = await mymodel.save();
-          }
+          console.log("myModel", myModel);
+
+          // if (myModel) {
+          //   console.log("Model exist", myModel);
+          // } else {
+          //   const newModel = { label, make: makeId, type: ["plants"] };
+          //   const mymodel = new allModels(newModel);
+
+          //   const result = await mymodel.save();
+          // }
         }
       } else {
         console.log("make not found", make);
       }
     }
 
-    const allModel = await allModels.find({ type: "motorhomes" }).lean();
-    const allModelCount = await allModels.countDocuments({ type: "motorhomes" });
+    const allModel = await allModels.find({ type: "plants" }).lean();
+    const allModelCount = await allModels.countDocuments({ type: "plants" });
 
     // console.log("allMake", allMake);
 

@@ -95,6 +95,7 @@ module.exports.getAllvehicles = async (req, res) => {
           typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
       }
     });
+    queryObj.sellOrRent = { $regex: filters.sellOrRent || "sell", $options: "i" };
 
     idFilters.forEach((filter) => {
       if (filters[filter]) {
@@ -130,7 +131,7 @@ module.exports.getAllvehicles = async (req, res) => {
     }
 
     // console.log("filters", filters);
-    console.log("queryObj1", queryObj);
+    // console.log("queryObj", queryObj);
     // console.log("paginationDetails", paginationDetails);
 
     let allVehicles = await vehiclesModel.aggregate([
@@ -206,8 +207,6 @@ module.exports.getAllvehicles = async (req, res) => {
       },
     ]);
 
-    // console.log("allVehicles", allVehicles);
-
     const vehicleCount = await getVehicleCount(filters);
     const response = {
       items: allVehicles,
@@ -226,7 +225,6 @@ module.exports.getResultCount = async (req, res) => {
     let { filters } = req.body;
 
     const vehicleCount = await getVehicleCount(filters);
-
     const response = {
       totalCount: vehicleCount,
     };
@@ -283,7 +281,7 @@ const getVehicleCount = async (filters) => {
   Object.keys(filters).forEach((filter) => {
     const searchValue = filters[filter];
     if (
-      searchValue &&
+      searchValue.toString() &&
       !extraFilters.includes(filter) &&
       !idFilters.includes(filter) &&
       filter !== "userType"
@@ -305,13 +303,13 @@ const getVehicleCount = async (filters) => {
       $lte: parseInt(filters.maxPrice || 9999999999),
     };
   }
-  if (!filters.year) {
+  if (!filters.year && (filters.minYear || filters.maxYear)) {
     queryObj.year = {
       $gte: parseInt(filters.minYear || 1930),
       $lte: parseInt(filters.maxYear || new Date().getFullYear()),
     };
   }
-  if (!filters.mileage) {
+  if (!filters.mileage && (filters.minMileage || filters.maxMileage)) {
     queryObj.mileage = {
       $gte: parseInt(filters.minMileage || 0),
       $lte: parseInt(filters.maxMileage || 999999),
