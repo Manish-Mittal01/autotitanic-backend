@@ -9,6 +9,7 @@ const vehiclesModel = require("../../Models/vehiclesModel");
 const { UserServices } = require("../../services/userServices");
 const UserModel = require("../../Models/UserModel");
 const cityModel = require("../../Models/cityModel");
+const reviewModel = require("../../Models/reviewModel");
 
 // module.exports.searchUser = async (req, res) => {
 //   try {
@@ -425,11 +426,19 @@ module.exports.getVehicleDetails = async (req, res) => {
       .populate([
         { path: "make model country city" },
         { path: "user", populate: { path: "country" } },
-      ]);
+      ])
+      .lean();
 
     if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
+    const ratings = await reviewModel.find({ seller: details.user?._id }).lean();
+    const ratingAvg =
+      ratings.reduce((acc, curr) => acc + Number(curr.rating), 0) / ratings.length || 0;
 
-    return ResponseService.success(res, "Vehicle details found", details);
+    return ResponseService.success(res, "Vehicle details found", {
+      ...details,
+      rating: ratingAvg,
+      reviewsCount: ratings.length,
+    });
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);

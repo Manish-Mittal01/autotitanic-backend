@@ -37,8 +37,9 @@ module.exports.addReview = async (req, res) => {
   }
 };
 
-module.exports.getWishlist = async (req, res) => {
+module.exports.getReviews = async (req, res) => {
   try {
+    const { seller } = req.body;
     const token = req.headers["x-access-token"];
 
     const isTokenValid = await UserServices.validateToken(token);
@@ -46,44 +47,9 @@ module.exports.getWishlist = async (req, res) => {
     if (isTokenValid?.tokenExpired || !isTokenValid._id)
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
-    const wishlist = await wishlistmodel.find({ user: isTokenValid._id }).populate({
-      path: "user vehicle",
-      populate: {
-        path: "make model city country user",
-        // path: "make model variant city country user",
-        strictPopulate: false,
-      },
-    });
+    const reviews = await reviewModel.find({ seller }).populate("user").lean();
 
-    return ResponseService.success(res, "Vehicle details found", wishlist);
-  } catch (error) {
-    console.log("error", error);
-    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
-  }
-};
-
-module.exports.removewishlistItem = async (req, res) => {
-  try {
-    const { id } = req.body;
-    const token = req.headers["x-access-token"];
-
-    const isTokenValid = await UserServices.validateToken(token);
-    // console.log("isTokenValid", isTokenValid);
-    if (isTokenValid?.tokenExpired || !isTokenValid._id)
-      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
-
-    if (!id) return ResponseService.failed(res, "Id is required", StatusCode.badRequest);
-
-    const isVehicleExist = await wishlistmodel.findOne({ _id: id });
-
-    if (!isVehicleExist)
-      return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
-
-    const result = await wishlistmodel.deleteOne({
-      _id: id,
-    });
-
-    return ResponseService.success(res, "Vehicle removed from wishlist", result);
+    return ResponseService.success(res, "Vehicle details found", reviews);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);

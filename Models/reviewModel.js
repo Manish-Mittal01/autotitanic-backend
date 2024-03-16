@@ -14,10 +14,11 @@ const reviewSchema = Schema(
     },
     rating: {
       type: String,
+      required: true,
     },
-    reviews: {
-      type: [{ type: String }],
-      default: [],
+    review: {
+      type: String,
+      required: true,
     },
   },
   { timestamps: true, versionKey: false }
