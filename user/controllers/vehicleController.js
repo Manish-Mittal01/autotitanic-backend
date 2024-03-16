@@ -1,7 +1,7 @@
 const functions = require("firebase-functions");
 const cors = require("cors")({ origin: true });
 const { transporter } = require("../../firebaseConfig");
-const { Types } = require("mongoose");
+const { Types, default: mongoose } = require("mongoose");
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
@@ -9,6 +9,41 @@ const vehiclesModel = require("../../Models/vehiclesModel");
 const { UserServices } = require("../../services/userServices");
 const UserModel = require("../../Models/UserModel");
 const cityModel = require("../../Models/cityModel");
+
+// module.exports.searchUser = async (req, res) => {
+//   try {
+//     const { keyword, name } = req.body;
+
+//     const keys = Object.keys(vehiclesModel.schema.paths); // Get all keys from the schema
+//     const regex = new RegExp(keyword, "i"); // 'i' flag for case-insensitive search
+
+//     const orConditions = keys
+//       .map((key) => {
+//         const condition = {};
+
+//         const field = vehiclesModel.schema.paths[key];
+
+//         // Check if the field is of type String
+//         if (field.instance === "ObjectID" || field.instance instanceof mongoose.Types.ObjectId) {
+//           condition[`${key}._id`] = Types.ObjectId(filters[key]);
+//         } else if (field.instance === "String") {
+//           condition[key] = { $regex: regex };
+//         } else if (field.instance === "Array" && field.caster.instance === "String") {
+//           condition[key] = { $in: [regex] };
+//         }
+
+//         return condition;
+//       })
+//       .filter((condition) => Object.keys(condition).length > 0);
+
+//     const query = { name: { $regex: new RegExp(name, "i") }, $or: orConditions };
+
+//     return ResponseService.success(res, "User added", users);
+//   } catch (error) {
+//     console.log("error", error);
+//     return ResponseService.failed(res, error?.message || error, StatusCode.serverError);
+//   }
+// };
 
 module.exports.addVehicle = async (req, res) => {
   try {
@@ -80,21 +115,47 @@ module.exports.getAllvehicles = async (req, res) => {
 
     const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
     const idFilters = ["make", "model", "city", "country", "user"];
-    // const idFilters = ["make", "model", "variant", "city", "country", "user"];
+    let queryObj = {};
 
-    const queryObj = {};
+    const keys = Object.keys(vehiclesModel.schema.paths); // Get all keys from the schema
+    const orConditions = keys
+      .map((key) => {
+        const condition = {};
+
+        const field = vehiclesModel.schema.paths[key];
+        const regex = new RegExp(filters.keyword, "i"); // 'i' flag for case-insensitive search
+
+        // Check if the field type
+        if (field.instance === "ObjectID" || field.instance instanceof mongoose.Types.ObjectId) {
+          // condition[`${key}._id`] = Types.ObjectId(filters[key]);
+        } else if (field.instance === "String") {
+          condition[key] = { $regex: regex };
+        } else if (field.instance === "Number") {
+          condition[key] = filters.keyword;
+        } else if (field.instance === "Array" && field.caster.instance === "String") {
+          condition[key] = { $in: [regex] };
+        }
+
+        return condition;
+      })
+      .filter((condition) => Object.keys(condition).length > 0);
+
+    queryObj = { $or: orConditions };
+
     Object.keys(filters).forEach((filter) => {
       const searchValue = filters[filter];
       if (
         searchValue.toString() &&
         !extraFilters.includes(filter) &&
         !idFilters.includes(filter) &&
-        filter !== "userType"
+        filter !== "userType" &&
+        filter !== "keyword"
       ) {
         queryObj[filter] =
           typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
       }
     });
+
     queryObj.sellOrRent = { $regex: filters.sellOrRent || "sell", $options: "i" };
 
     idFilters.forEach((filter) => {
@@ -207,6 +268,10 @@ module.exports.getAllvehicles = async (req, res) => {
       },
     ]);
 
+    // allVehicles = allVehicles.filter((vehicle) =>
+    //   JSON.stringify(vehicle).includes(filters.keyword)
+    // );
+
     const vehicleCount = await getVehicleCount(filters);
     const response = {
       items: allVehicles,
@@ -273,56 +338,7 @@ module.exports.getResultCountByFilter = async (req, res) => {
 };
 
 const getVehicleCount = async (filters) => {
-  const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
-  const idFilters = ["make", "model", "city", "country", "user"];
-  // const idFilters = ["make", "model", "variant", "city", "country"];
-
-  const queryObj = {};
-  Object.keys(filters).forEach((filter) => {
-    const searchValue = filters[filter];
-    if (
-      searchValue.toString() &&
-      !extraFilters.includes(filter) &&
-      !idFilters.includes(filter) &&
-      filter !== "userType"
-    ) {
-      queryObj[filter] =
-        typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
-    }
-  });
-
-  idFilters.forEach((filter) => {
-    if (filters[filter]) {
-      queryObj[`${filter}._id`] = Types.ObjectId(filters[filter]);
-    }
-  });
-
-  if (!filters.price) {
-    queryObj.price = {
-      $gte: parseInt(filters.minPrice) || 0,
-      $lte: parseInt(filters.maxPrice || 9999999999),
-    };
-  }
-  if (!filters.year && (filters.minYear || filters.maxYear)) {
-    queryObj.year = {
-      $gte: parseInt(filters.minYear || 1930),
-      $lte: parseInt(filters.maxYear || new Date().getFullYear()),
-    };
-  }
-  if (!filters.mileage && (filters.minMileage || filters.maxMileage)) {
-    queryObj.mileage = {
-      $gte: parseInt(filters.minMileage || 0),
-      $lte: parseInt(filters.maxMileage || 999999),
-    };
-  }
-
-  if (!filters.user && !filters.status) {
-    queryObj.status = { $ne: "draft" };
-  }
-
-  if (filters.userType) {
-    queryObj[`user.userType`] = { $regex: filters.userType, $options: "i" };
-  }
+  const queryObj = myFilter(filters);
 
   // console.log("filters", filters);
   // console.log("queryObj1", queryObj);
@@ -513,3 +529,84 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+const myFilter = (filters) => {
+  const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
+  const idFilters = ["make", "model", "city", "country", "user"];
+
+  let queryObj = {};
+
+  const keys = Object.keys(vehiclesModel.schema.paths); // Get all keys from the schema
+  const orConditions = keys
+    .map((key) => {
+      const condition = {};
+
+      const field = vehiclesModel.schema.paths[key];
+      const regex = new RegExp(filters.keyword, "i"); // 'i' flag for case-insensitive search
+
+      // Check if the field type
+      if (field.instance === "ObjectID" || field.instance instanceof mongoose.Types.ObjectId) {
+        // condition[`${key}._id`] = Types.ObjectId(filters[key]);
+      } else if (field.instance === "String") {
+        condition[key] = { $regex: regex };
+      } else if (field.instance === "Number") {
+        condition[key] = filters.keyword;
+      } else if (field.instance === "Array" && field.caster.instance === "String") {
+        condition[key] = { $in: [regex] };
+      }
+
+      return condition;
+    })
+    .filter((condition) => Object.keys(condition).length > 0);
+
+  queryObj = { $or: orConditions };
+
+  Object.keys(filters).forEach((filter) => {
+    const searchValue = filters[filter];
+    if (
+      searchValue.toString() &&
+      !extraFilters.includes(filter) &&
+      !idFilters.includes(filter) &&
+      filter !== "userType" &&
+      filter !== "keyword"
+    ) {
+      queryObj[filter] =
+        typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
+    }
+  });
+
+  idFilters.forEach((filter) => {
+    if (filters[filter]) {
+      queryObj[`${filter}._id`] = Types.ObjectId(filters[filter]);
+    }
+  });
+
+  if (!filters.price) {
+    queryObj.price = {
+      $gte: parseInt(filters.minPrice) || 0,
+      $lte: parseInt(filters.maxPrice || 9999999999),
+    };
+  }
+  if (!filters.year && (filters.minYear || filters.maxYear)) {
+    queryObj.year = {
+      $gte: parseInt(filters.minYear || 1930),
+      $lte: parseInt(filters.maxYear || new Date().getFullYear()),
+    };
+  }
+  if (!filters.mileage && (filters.minMileage || filters.maxMileage)) {
+    queryObj.mileage = {
+      $gte: parseInt(filters.minMileage || 0),
+      $lte: parseInt(filters.maxMileage || 999999),
+    };
+  }
+
+  if (!filters.user && !filters.status) {
+    queryObj.status = { $ne: "draft" };
+  }
+
+  if (filters.userType) {
+    queryObj[`user.userType`] = { $regex: filters.userType, $options: "i" };
+  }
+
+  return queryObj;
+};

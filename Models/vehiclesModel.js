@@ -126,13 +126,6 @@ const vehicleSchema = Schema(
     priceType: {
       type: String,
     },
-    rating: {
-      type: String,
-    },
-    reviews: {
-      type: [{ type: String }],
-      default: [],
-    },
     seat: {
       type: Number,
     },
@@ -153,9 +146,6 @@ const vehicleSchema = Schema(
     },
 
     // vehicle type
-    truckCategory: {
-      type: String,
-    },
     type: {
       type: String,
       required: true,
