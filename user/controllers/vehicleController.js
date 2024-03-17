@@ -11,41 +11,6 @@ const UserModel = require("../../Models/UserModel");
 const cityModel = require("../../Models/cityModel");
 const reviewModel = require("../../Models/reviewModel");
 
-// module.exports.searchUser = async (req, res) => {
-//   try {
-//     const { keyword, name } = req.body;
-
-//     const keys = Object.keys(vehiclesModel.schema.paths); // Get all keys from the schema
-//     const regex = new RegExp(keyword, "i"); // 'i' flag for case-insensitive search
-
-//     const orConditions = keys
-//       .map((key) => {
-//         const condition = {};
-
-//         const field = vehiclesModel.schema.paths[key];
-
-//         // Check if the field is of type String
-//         if (field.instance === "ObjectID" || field.instance instanceof mongoose.Types.ObjectId) {
-//           condition[`${key}._id`] = Types.ObjectId(filters[key]);
-//         } else if (field.instance === "String") {
-//           condition[key] = { $regex: regex };
-//         } else if (field.instance === "Array" && field.caster.instance === "String") {
-//           condition[key] = { $in: [regex] };
-//         }
-
-//         return condition;
-//       })
-//       .filter((condition) => Object.keys(condition).length > 0);
-
-//     const query = { name: { $regex: new RegExp(name, "i") }, $or: orConditions };
-
-//     return ResponseService.success(res, "User added", users);
-//   } catch (error) {
-//     console.log("error", error);
-//     return ResponseService.failed(res, error?.message || error, StatusCode.serverError);
-//   }
-// };
-
 module.exports.addVehicle = async (req, res) => {
   try {
     const { condition, country, city, title, description, media, price, currency, type } = req.body;
@@ -233,15 +198,6 @@ module.exports.getAllvehicles = async (req, res) => {
         },
       },
       { $unwind: { path: "$model", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
-      // {
-      //   $lookup: {
-      //     from: "variants",
-      //     localField: "variant",
-      //     foreignField: "_id",
-      //     as: "variant",
-      //   },
-      // },
-      // { $unwind: { path: "$variant", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: "users",
@@ -251,6 +207,22 @@ module.exports.getAllvehicles = async (req, res) => {
         },
       },
       { $unwind: { path: "$user", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "reviews",
+          let: {
+            userId: "$user._id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$seller", "$$userId"] },
+              },
+            },
+          ],
+          as: "sellerReviews",
+        },
+      },
       {
         $match: {
           ...queryObj,
@@ -268,10 +240,6 @@ module.exports.getAllvehicles = async (req, res) => {
         $limit: paginationDetails.limit,
       },
     ]);
-
-    // allVehicles = allVehicles.filter((vehicle) =>
-    //   JSON.stringify(vehicle).includes(filters.keyword)
-    // );
 
     const vehicleCount = await getVehicleCount(filters);
     const response = {
