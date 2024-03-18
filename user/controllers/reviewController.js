@@ -43,7 +43,6 @@ module.exports.getReviews = async (req, res) => {
     const token = req.headers["x-access-token"];
 
     const isTokenValid = await UserServices.validateToken(token);
-    // console.log("isTokenValid", isTokenValid);
     if (isTokenValid?.tokenExpired || !isTokenValid._id)
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 

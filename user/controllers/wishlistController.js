@@ -17,7 +17,7 @@ module.exports.addToWishlist = async (req, res) => {
     const validationError = checkRequiredFields({ id });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const isVehicleExist = await wishlistmodel.findOne({ vehicle: id });
+    const isVehicleExist = await wishlistmodel.findOne({ vehicle: id, user: isTokenValid._id });
     if (isVehicleExist)
       return ResponseService.failed(res, "Vehicle already exist", StatusCode.forbidden);
 

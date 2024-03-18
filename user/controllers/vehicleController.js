@@ -76,6 +76,11 @@ module.exports.addVehicle = async (req, res) => {
 
 module.exports.getAllvehicles = async (req, res) => {
   try {
+    const token = req.headers["x-access-token"];
+
+    const isTokenValid = await UserServices.validateToken(token);
+    // if (isTokenValid?.tokenExpired || !isTokenValid._id)
+
     let { filters = {}, paginationDetails, listType } = req.body;
     paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
@@ -223,6 +228,71 @@ module.exports.getAllvehicles = async (req, res) => {
           as: "sellerReviews",
         },
       },
+
+      {
+        $lookup: {
+          from: "wishlists",
+          let: {
+            vehicleId: "$_id",
+            userId: Types.ObjectId(isTokenValid._id),
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$user", "$$userId"],
+                    },
+                    { $eq: ["$vehicle", "$$vehicleId"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "wishlistItem",
+        },
+      },
+      {
+        $unwind: {
+          path: "$wishlistItem",
+          includeArrayIndex: "0",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $lookup: {
+          from: "compares",
+          let: {
+            vehicleId: "$_id",
+            userId: Types.ObjectId(isTokenValid._id),
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    {
+                      $eq: ["$user", "$$userId"],
+                    },
+                    { $eq: ["$vehicle", "$$vehicleId"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "compareItem",
+        },
+      },
+      {
+        $unwind: {
+          path: "$compareItem",
+          includeArrayIndex: "0",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
       {
         $match: {
           ...queryObj,
