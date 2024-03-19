@@ -20,6 +20,20 @@ const reviewSchema = Schema(
       type: String,
       required: true,
     },
+    likes: {
+      type: Number,
+    },
+    dislikes: {
+      type: Number,
+    },
+    replies: {
+      type: [
+        {
+          user: { type: Types.ObjectId, ref: "users", required: true },
+          reply: { type: String, required: true },
+        },
+      ],
+    },
   },
   { timestamps: true, versionKey: false }
 );
