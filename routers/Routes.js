@@ -92,7 +92,13 @@ const {
   getUserAnalytics,
   getVehicleAnalytics,
 } = require("../admin/controllers/analyticsController");
-const { addReview, getReviews } = require("../user/controllers/reviewController");
+const {
+  addReview,
+  getReviews,
+  manageLikes,
+  addReply,
+  getAllReply,
+} = require("../user/controllers/reviewController");
 
 router.route("/uploadMake").get(uploadMake);
 router.route("/uploadModel").get(uploadModel);
@@ -130,6 +136,9 @@ router.route("/makeOffer").post(makeOffer);
 //Review
 router.route("/addReview").post(addReview);
 router.route("/getReviews").post(getReviews);
+router.route("/manageLikes").post(manageLikes);
+router.route("/addReply").post(addReply);
+router.route("/getAllReply").post(getAllReply);
 
 //user compare list
 router.route("/addToCompare").post(addToCompare);

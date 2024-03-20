@@ -21,16 +21,17 @@ const reviewSchema = Schema(
       required: true,
     },
     likes: {
-      type: Number,
+      type: [{ user: Types.ObjectId }],
     },
     dislikes: {
-      type: Number,
+      type: [{ user: Types.ObjectId }],
     },
     replies: {
       type: [
         {
           user: { type: Types.ObjectId, ref: "users", required: true },
           reply: { type: String, required: true },
+          createdAt: { type: Date },
         },
       ],
     },
