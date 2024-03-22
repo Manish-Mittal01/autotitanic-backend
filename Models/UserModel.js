@@ -16,11 +16,14 @@ const userSchema = Schema(
     },
     status: {
       type: String,
-      default: "active",
+      enum: ["inactive", "active", "blocked"],
+      default: "inactive",
+      required: true,
     },
     email: {
       type: String,
       required: true,
+      unique: true,
     },
     name: {
       type: String,

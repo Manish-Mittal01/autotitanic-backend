@@ -1,5 +1,6 @@
 const UserModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const functions = require("firebase-functions");
 const { StatusCode } = require("../common/Constants");
@@ -9,21 +10,7 @@ const otpModel = require("../Models/otpModel");
 const { UserServices } = require("../services/userServices");
 const cors = require("cors")({ origin: true });
 const compareModel = require("../Models/compareModel");
-const transporter = require("../firebaseConfig");
-
-/**
- * Here we're using Gmail to send
- */
-// let transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   host: "smtp.gmail.com",
-//   port: 465,
-//   secure: true,
-//   auth: {
-//     user: "devmanishmittal@gmail.com",
-//     pass: "kzqz wwku cyzp zjjq",
-//   },
-// });
+const { transporter } = require("../firebaseConfig");
 
 module.exports.register = async (req, res) => {
   try {
@@ -35,40 +22,194 @@ module.exports.register = async (req, res) => {
       userType,
       country,
       mobile,
-      // countryCode,
       password,
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const userExist = await UserModel.findOne({ email });
+    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+    let isValidEmail = emailRegex.test(email);
+    if (!email || !isValidEmail)
+      return ResponseService.failed(res, "Invalid email", StatusCode.forbidden);
 
-    if (userExist)
+    const userExist = await UserModel.findOne({ email });
+    if (userExist && userExist.status === "active")
       return ResponseService.failed(res, "User already exist with email", StatusCode.forbidden);
 
-    const newUser = {
-      name,
-      email,
-      userType,
-      country,
-      mobile,
-      whatsapp,
-      // countryCode,
-      password,
-      dealerLogo: userType === "private" ? "" : image,
-      userAvatar: userType === "private" ? image : "",
+    if (userExist && userExist.status === "blocked")
+      return ResponseService.failed(res, "User with this email is blocked", StatusCode.forbidden);
+
+    const OTP = otpGenerator.generate(6, {
+      digits: true,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
+
+    const otp = new otpModel({ email: email, otp: OTP });
+    const otpSalt = await bcrypt.genSalt(10);
+    otp.otp = await bcrypt.hash(otp.otp, otpSalt);
+    const otpResult = await otp.save();
+
+    // <a href="manishmittal.tech/verify/email?OTP=${otpResult.otp}">
+
+    const emailToken = jwt.sign(
+      {
+        email: email,
+        otp: otpResult.otp,
+      },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "5m" }
+    );
+
+    const mailOptions = {
+      from: "Manish Mittal <devmanishmittal@gmail.com>",
+      to: email,
+      subject: "Verify email",
+      html: `<p style="font-size: 16px;">
+      Click on the link below  to verify your account on autotitanic.com<br/>
+        <a href="http://localhost:3000/verify/email?token=${emailToken}&email=${email}">
+        Click here to Verify your email
+        <a/>
+      </p>
+    <br />`,
     };
-    const user = new UserModel(newUser);
 
-    const salt = await bcrypt.genSalt(8);
-    const encryptPassword = await bcrypt.hash(password, salt);
-    user.password = encryptPassword;
+    // returning result
+    transporter.sendMail(mailOptions, async (erro, info) => {
+      if (erro) {
+        return ResponseService.serverError(res, erro);
+      }
 
-    let result = await user.save();
+      if (!userExist) {
+        const newUser = {
+          name,
+          email,
+          userType,
+          country,
+          mobile,
+          whatsapp,
+          password,
+          dealerLogo: userType === "private" ? "" : image,
+          userAvatar: userType === "private" ? image : "",
+        };
+        const user = new UserModel(newUser);
 
-    return ResponseService.success(res, "User registered successfully", result);
+        const salt = await bcrypt.genSalt(8);
+        const encryptPassword = await bcrypt.hash(password, salt);
+        user.password = encryptPassword;
+
+        let result = await user.save();
+      }
+
+      return ResponseService.success(res, "Verification mail sent!", {});
+    });
   } catch (error) {
     console.log("error", error?.message);
     return ResponseService.failed(res, error.message || error);
+  }
+};
+
+module.exports.resendVerificationEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const validationError = checkRequiredFields({ email });
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
+
+    const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
+    let isValidEmail = emailRegex.test(email);
+    if (!email || !isValidEmail)
+      return ResponseService.failed(res, "Invalid email", StatusCode.forbidden);
+
+    const userExist = await UserModel.findOne({ email });
+    if (!userExist) return ResponseService.failed(res, "Email not registered", StatusCode.notFound);
+
+    if (userExist && userExist.status === "active")
+      return ResponseService.failed(res, "Email already verified", StatusCode.badRequest);
+
+    if (userExist && userExist.status === "blocked")
+      return ResponseService.failed(res, "Email is blocked", StatusCode.badRequest);
+
+    const OTP = otpGenerator.generate(6, {
+      digits: true,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
+
+    const otp = new otpModel({ email: email, otp: OTP });
+    const otpSalt = await bcrypt.genSalt(10);
+    otp.otp = await bcrypt.hash(otp.otp, otpSalt);
+    const otpResult = await otp.save();
+
+    // <a href="manishmittal.tech/verify/email?OTP=${otpResult.otp}">
+
+    const emailToken = jwt.sign(
+      {
+        email: email,
+        otp: otpResult.otp,
+      },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "5m" }
+    );
+
+    const mailOptions = {
+      from: "Manish Mittal <devmanishmittal@gmail.com>",
+      to: email,
+      subject: "Verify email",
+      html: `<p style="font-size: 16px;">
+      Click on the link below  to verify your account on autotitanic.com<br/>
+        <a href="http://localhost:3000/verify/email?token=${emailToken}&email=${email}">
+        Click here to Verify your email
+        <a/>
+      </p>
+    <br />`,
+    };
+
+    return transporter.sendMail(mailOptions, async (erro, info) => {
+      if (erro) {
+        return ResponseService.serverError(res, erro);
+      }
+      return ResponseService.success(res, "Verification mail sent!", {});
+    });
+  } catch (error) {
+    console.log("error", error?.message);
+    return ResponseService.failed(res, error.message || error);
+  }
+};
+
+module.exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) return ResponseService.failed(res, "toen is required", StatusCode.badRequest);
+
+    const isTokenValid = await UserServices.validateToken(token);
+    if (isTokenValid?.tokenExpired || !isTokenValid.email)
+      return ResponseService.failed(res, "Link expired", StatusCode.unauthorized);
+
+    let otpHolder = await otpModel.find({ email: isTokenValid.email }).lean();
+    if (otpHolder.length === 0)
+      return ResponseService.failed(res, "Link expired", StatusCode.badRequest);
+
+    otpHolder = otpHolder.pop();
+
+    console.log("otpHolder.otp", otpHolder.otp);
+    console.log("otpHolder.otp", isTokenValid.otp);
+
+    if (isTokenValid.otp !== otpHolder.otp)
+      return ResponseService.failed(res, "Invalid link", StatusCode.badRequest);
+
+    const result = await UserModel.updateOne({ email: isTokenValid.email }, { status: "active" });
+
+    const otpDelete = await otpModel.deleteMany({
+      email: otpHolder.email,
+    });
+
+    return ResponseService.success(res, "Email verified!");
+  } catch (error) {
+    console.log("verify email error", error);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -91,15 +232,18 @@ module.exports.login = async (req, res) => {
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (user.email === email && isPasswordCorrect) {
+      console.log("user.status", user.status === "inactive");
+      if (user.status === "inactive") {
+        return ResponseService.failed(res, "Verify email before login", StatusCode.forbidden);
+      }
       const token = user.generateJWT(user);
-
       return ResponseService.success(res, "Login Successful", { token });
     } else {
       return ResponseService.failed(res, "Incorrect Email or Password", StatusCode.unauthorized);
     }
   } catch (error) {
     console.log("error in login controller", error);
-    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -168,7 +312,7 @@ module.exports.resetPassword = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     let newPassword = await bcrypt.hash(password, salt);
-    result = await UserModel.updateOne({ email: email }, { password: newPassword });
+    const result = await UserModel.updateOne({ email: email }, { password: newPassword });
 
     const otpDelete = await otpModel.deleteMany({
       email: rightOtpFind.email,

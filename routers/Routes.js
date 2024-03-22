@@ -9,6 +9,8 @@ const {
   getUserProfile,
   updateUserProfile,
   changePassword,
+  verifyEmail,
+  resendVerificationEmail,
 } = require("../auth/authController");
 
 //admin import
@@ -114,6 +116,8 @@ router.route("/resetPassword").post(resetPassword);
 router.route("/changePassword").post(changePassword);
 router.route("/getUserProfile").get(getUserProfile);
 router.route("/updateUserProfile").post(updateUserProfile);
+router.route("/verifyEmail").post(verifyEmail);
+router.route("/resendVerificationEmail").post(resendVerificationEmail);
 
 //user
 //filters
