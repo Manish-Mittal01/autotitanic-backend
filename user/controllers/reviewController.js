@@ -98,7 +98,9 @@ module.exports.getReviews = async (req, res) => {
     ).toFixed(1);
 
     const ratingType =
-      rating <= 1.5
+      rating.toString() === "0.0"
+        ? "No reviews yet"
+        : rating <= 1.5
         ? "Poor"
         : rating <= 2.5
         ? "Fair"

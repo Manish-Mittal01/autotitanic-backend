@@ -604,9 +604,9 @@ module.exports.getVehicleDetails = async (req, res) => {
 
     if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
     const ratings = await reviewModel.find({ seller: details.user?._id }).lean();
-    const ratingAvg =
-      (ratings.reduce((acc, curr) => acc + Number(curr.rating), 0) / ratings.length).toFixed(2) ||
-      0;
+    let ratingAvg =
+      ratings.reduce((acc, curr) => acc + Number(curr.rating), 0) / ratings.length || 0;
+    ratingAvg = ratingAvg.toFixed(1);
 
     return ResponseService.success(res, "Vehicle details found", {
       ...details,
