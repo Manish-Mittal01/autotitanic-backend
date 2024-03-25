@@ -98,14 +98,14 @@ module.exports.getReviews = async (req, res) => {
     ).toFixed(1);
 
     const ratingType =
-      rating <= 1
+      rating <= 1.5
         ? "Poor"
-        : rating <= 2
-        ? "Not Bad"
-        : rating <= 3
+        : rating <= 2.5
         ? "Fair"
-        : rating <= 4
+        : rating <= 3.5
         ? "Good"
+        : rating <= 4.5
+        ? "Very Good"
         : "Excellent";
 
     const data = {

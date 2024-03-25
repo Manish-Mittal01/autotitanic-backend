@@ -194,9 +194,6 @@ module.exports.verifyEmail = async (req, res) => {
 
     otpHolder = otpHolder.pop();
 
-    console.log("otpHolder.otp", otpHolder.otp);
-    console.log("otpHolder.otp", isTokenValid.otp);
-
     if (isTokenValid.otp !== otpHolder.otp)
       return ResponseService.failed(res, "Invalid link", StatusCode.badRequest);
 
@@ -278,9 +275,18 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
         to: email,
         // to: "devmanishmittal@gmail.com",
         subject: "Reset Password", // email subject
-        html: `<p style="font-size: 16px;">Your Otp to reset password on autotitanic is ${OTP}. It is valid for only 5 minutes</p>
-                    <br />
-                `, // email content in HTML
+        html: `<div  style="font-size: 16px;">
+                <p>Dear ${isUserExist?.name || "User"}</p>
+                <br/>
+                <p>Your One Time Password (OTP) to reset your AutoTitanic account password is ${OTP}. This can only be used once and it is valid for 15 minutes.
+                </p>
+                <br/>
+                <p>Please do not share this with anyone.</p>
+                <br/>
+                <p>Kind regards,</p>
+                <p>AutoTitanic</p>
+                <p>Your Otp to reset password on autotitanic is ${OTP}. It is valid for only 15 minutes</p>
+               </div>   `, // email content in HTML
       };
 
       // returning result

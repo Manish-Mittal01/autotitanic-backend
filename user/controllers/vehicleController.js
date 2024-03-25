@@ -22,22 +22,12 @@ module.exports.addVehicle = async (req, res) => {
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
     const validationError = checkRequiredFields({
-      // condition,
-      // country,
-      // city,
-      // title,
-      // description,
-      // media,
-      // price,
-      // currency,
       type,
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    // console.log("media", media);
-
-    if (media.length < 5)
-      return ResponseService.failed(res, "Atleast 5 images required", StatusCode.badRequest);
+    if (media.length < 2)
+      return ResponseService.failed(res, "Atleast 2 images required", StatusCode.badRequest);
 
     let myCity = "";
 
@@ -161,10 +151,6 @@ module.exports.getAllvehicles = async (req, res) => {
         $lte: parseInt(filters.maxMileage || 999999),
       };
     }
-
-    // console.log("filters", filters);
-    // console.log("queryObj", queryObj);
-    // console.log("paginationDetails", paginationDetails);
 
     let allVehicles = await vehiclesModel.aggregate([
       {
@@ -455,17 +441,166 @@ const getVehicleCount = async (filters) => {
 module.exports.getVehicleDetails = async (req, res) => {
   try {
     const { vehicleId } = req.params;
+    const token = req.headers["x-access-token"];
+
+    const isTokenValid = await UserServices.validateToken(token);
 
     const isValidId = Types.ObjectId.isValid(vehicleId);
     if (!isValidId) return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
 
-    const details = await vehiclesModel
-      .findOne({ _id: vehicleId })
-      .populate([
-        { path: "make model country city" },
-        { path: "user", populate: { path: "country" } },
-      ])
-      .lean();
+    // const details = await vehiclesModel
+    //   .findOne({ _id: vehicleId })
+    //   .populate([
+    //     { path: "make model country city" },
+    //     { path: "user", populate: { path: "country" } },
+    //   ])
+    //   .lean();
+
+    const myPipeline = [
+      {
+        $match: {
+          _id: Types.ObjectId(vehicleId),
+        },
+      },
+      {
+        $lookup: {
+          from: "countries",
+          localField: "country",
+          foreignField: "_id",
+          as: "country",
+        },
+      },
+      { $unwind: { path: "$country", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "cities",
+          localField: "city",
+          foreignField: "_id",
+          as: "city",
+        },
+      },
+      { $unwind: { path: "$city", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "makes",
+          localField: "make",
+          foreignField: "_id",
+          as: "make",
+        },
+      },
+      { $unwind: { path: "$make", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "models",
+          localField: "model",
+          foreignField: "_id",
+          as: "model",
+        },
+      },
+      { $unwind: { path: "$model", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "users",
+          localField: "user",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: { path: "$user", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "reviews",
+          let: {
+            userId: "$user._id",
+          },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$seller", "$$userId"] },
+              },
+            },
+          ],
+          as: "sellerReviews",
+        },
+      },
+    ];
+
+    if (isTokenValid._id) {
+      myPipeline.push(
+        ...[
+          {
+            $lookup: {
+              from: "wishlists",
+              let: {
+                vehicleId: "$_id",
+                userId: Types.ObjectId(isTokenValid._id),
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        {
+                          $eq: ["$user", "$$userId"],
+                        },
+                        { $eq: ["$vehicle", "$$vehicleId"] },
+                      ],
+                    },
+                  },
+                },
+              ],
+              as: "wishlistItem",
+            },
+          },
+          {
+            $unwind: {
+              path: "$wishlistItem",
+              includeArrayIndex: "0",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+
+          {
+            $lookup: {
+              from: "compares",
+              let: {
+                vehicleId: "$_id",
+                userId: Types.ObjectId(isTokenValid._id),
+              },
+              pipeline: [
+                {
+                  $match: {
+                    $expr: {
+                      $and: [
+                        {
+                          $eq: ["$user", "$$userId"],
+                        },
+                        { $eq: ["$vehicle", "$$vehicleId"] },
+                      ],
+                    },
+                  },
+                },
+              ],
+              as: "compareItem",
+            },
+          },
+          {
+            $unwind: {
+              path: "$compareItem",
+              includeArrayIndex: "0",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+        ]
+      );
+    }
+
+    myPipeline.push({
+      $limit: 1,
+    });
+
+    let details = await vehiclesModel.aggregate(myPipeline);
+    details = details[0];
 
     if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
     const ratings = await reviewModel.find({ seller: details.user?._id }).lean();

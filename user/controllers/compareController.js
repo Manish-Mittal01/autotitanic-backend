@@ -3,6 +3,7 @@ const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
 const { UserServices } = require("../../services/userServices");
 const compareModel = require("../../Models/compareModel");
+const vehiclesModel = require("../../Models/vehiclesModel");
 
 module.exports.addToCompare = async (req, res) => {
   try {
@@ -21,7 +22,18 @@ module.exports.addToCompare = async (req, res) => {
     if (isVehicleExist)
       return ResponseService.failed(res, "Vehicle already exist", StatusCode.forbidden);
 
-    const compareList = await compareModel.find({ user: isTokenValid._id });
+    const compareList = await compareModel
+      .find({ user: isTokenValid._id })
+      .populate("vehicle")
+      .lean();
+
+    const newvehicle = await vehiclesModel.findOne({ _id: vehicle }).lean();
+    if (compareList.length > 0 && compareList[0]?.vehicle?.type !== newvehicle?.type)
+      return ResponseService.failed(
+        res,
+        "Please clear your compare list to add item of a new category",
+        StatusCode.forbidden
+      );
 
     if (compareList.length >= 5) {
       return ResponseService.failed(
