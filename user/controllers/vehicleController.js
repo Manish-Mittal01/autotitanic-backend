@@ -117,7 +117,9 @@ module.exports.getAllvehicles = async (req, res) => {
       }
     });
 
-    queryObj.sellOrRent = { $regex: filters.sellOrRent || "sell", $options: "i" };
+    if (filters.sellOrRent) {
+      queryObj.sellOrRent = { $regex: filters.sellOrRent, $options: "i" };
+    }
 
     idFilters.forEach((filter) => {
       if (filters[filter]) {
