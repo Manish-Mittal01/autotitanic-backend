@@ -61,6 +61,7 @@ module.exports.getVehicleAnalytics = async (req, res) => {
           createdAt: {
             $gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)), // Filter documents created in the last 12 months
           },
+          status: { $ne: "draft" },
         },
       },
       {
