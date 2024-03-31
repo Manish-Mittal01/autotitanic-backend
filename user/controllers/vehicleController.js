@@ -511,6 +511,21 @@ module.exports.getVehicleDetails = async (req, res) => {
       { $unwind: { path: "$user", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
+          from: "countries",
+          localField: "user.country",
+          foreignField: "_id",
+          as: "user.country",
+        },
+      },
+      {
+        $unwind: {
+          path: "$user.country",
+          includeArrayIndex: "0",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
           from: "reviews",
           let: {
             userId: "$user._id",
