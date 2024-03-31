@@ -45,6 +45,11 @@ const userSchema = Schema(
     userAvatar: {
       type: String,
     },
+    isAdmin: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   { timestamps: true, versionKey: false }
 );

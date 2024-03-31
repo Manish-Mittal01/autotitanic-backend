@@ -7,7 +7,8 @@ module.exports.getCitiesList = async (req, res) => {
   try {
     const { page = 1, limit = 10, search } = req.body;
 
-    let queryObj = { isUserCreated: false };
+    // let queryObj = { isUserCreated: false };
+    let queryObj = {};
     if (search) {
       queryObj["$or"] = [
         {
@@ -21,11 +22,6 @@ module.exports.getCitiesList = async (req, res) => {
 
     const allCities = await cityModel.aggregate([
       {
-        $match: {
-          ...queryObj,
-        },
-      },
-      {
         $lookup: {
           from: "countries",
           localField: "country",
@@ -34,6 +30,11 @@ module.exports.getCitiesList = async (req, res) => {
         },
       },
       { $unwind: { path: "$country", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          ...queryObj,
+        },
+      },
       {
         $skip: (Number(page) - 1) * limit,
       },

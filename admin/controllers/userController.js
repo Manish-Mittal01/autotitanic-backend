@@ -4,14 +4,24 @@ const { ResponseService } = require("../../common/responseService");
 const { StatusCode } = require("../../common/Constants");
 
 module.exports.allUsers = async (req, res) => {
-  const { page = 1, limit = 10, country } = req.body;
+  const { page = 1, limit = 10, status, search } = req.body;
 
   let queryObj = {};
-  if (country) {
-    queryObj.country = country;
+  if (status) {
+    queryObj.status = status;
+  }
+  if (search) {
+    queryObj["$or"] = [
+      {
+        email: { $regex: search || "", $options: "i" },
+      },
+      {
+        name: { $regex: search || "", $options: "i" },
+      },
+    ];
   }
 
-  let users = await User.find(queryObj)
+  let users = await User.find({ ...queryObj })
     .skip((page - 1) * limit)
     .limit(limit)
     .populate("country")
