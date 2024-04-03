@@ -101,6 +101,8 @@ const {
   addReply,
   getAllReply,
 } = require("../user/controllers/reviewController");
+const { addQuery } = require("../user/controllers/queryController");
+const { allQuery } = require("../admin/controllers/queryController");
 
 router.route("/uploadMake").get(uploadMake);
 router.route("/uploadModel").get(uploadModel);
@@ -201,6 +203,8 @@ router.route("/getVehicleAnalytics/:filterType").get(getVehicleAnalytics);
 //content-page
 router.route("/updateContentPage").post(updateContentPage);
 router.route("/addContentPage").post(addContentPage);
+router.route("/addQuery").post(addQuery);
+router.route("/allQuery").post(allQuery);
 
 //common
 router.route("/uploadFiles").post(upload.array("images"), uploadFiles);
