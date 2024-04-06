@@ -102,7 +102,13 @@ const {
   getAllReply,
 } = require("../user/controllers/reviewController");
 const { addQuery } = require("../user/controllers/queryController");
-const { allQuery } = require("../admin/controllers/queryController");
+const { allQuery, updateQuery } = require("../admin/controllers/queryController");
+const {
+  addBanner,
+  bannerList,
+  updateBanner,
+  getBanner,
+} = require("../admin/controllers/bannerController");
 
 router.route("/uploadMake").get(uploadMake);
 router.route("/uploadModel").get(uploadModel);
@@ -205,6 +211,11 @@ router.route("/updateContentPage").post(updateContentPage);
 router.route("/addContentPage").post(addContentPage);
 router.route("/addQuery").post(addQuery);
 router.route("/allQuery").post(allQuery);
+router.route("/updateQuery").post(updateQuery);
+router.route("/addBanner").post(addBanner);
+router.route("/bannerList").post(bannerList);
+router.route("/updateBanner").post(updateBanner);
+router.route("/getBanner").post(getBanner);
 
 //common
 router.route("/uploadFiles").post(upload.array("images"), uploadFiles);

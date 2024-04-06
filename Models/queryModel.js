@@ -18,6 +18,14 @@ const querySchema = Schema(
       type: String,
       required: true,
     },
+    file: {
+      type: String,
+    },
+    status: {
+      type: String,
+      enum: ["actice", "closed", "inProgress"],
+      default: "active",
+    },
   },
   { timestamps: true, versionKey: false }
 );

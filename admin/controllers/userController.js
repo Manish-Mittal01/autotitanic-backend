@@ -4,11 +4,14 @@ const { ResponseService } = require("../../common/responseService");
 const { StatusCode } = require("../../common/Constants");
 
 module.exports.allUsers = async (req, res) => {
-  const { page = 1, limit = 10, status, search } = req.body;
+  const { page = 1, limit = 10, status, search, country } = req.body;
 
   let queryObj = {};
   if (status) {
     queryObj.status = status;
+  }
+  if (country) {
+    queryObj.country = country;
   }
   if (search) {
     queryObj["$or"] = [
