@@ -16,6 +16,9 @@ const offerSchema = Schema(
       type: String,
       required: true,
     },
+    comment: {
+      type: String,
+    },
   },
   { timestamps: true, versionKey: false }
 );

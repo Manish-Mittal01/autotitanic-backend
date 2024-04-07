@@ -4,6 +4,8 @@ const { StatusCode } = require("../../common/Constants");
 const { UserServices } = require("../../services/userServices");
 const reviewModel = require("../../Models/reviewModel");
 const { Types } = require("mongoose");
+const UserModel = require("../../Models/UserModel");
+const { transporter } = require("../../firebaseConfig");
 
 module.exports.addReview = async (req, res) => {
   try {
@@ -18,6 +20,12 @@ module.exports.addReview = async (req, res) => {
     const validationError = checkRequiredFields({ seller, rating, review });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
+    const user = await UserModel.findOne({ _id: isTokenValid._id }).lean();
+
+    const isSellerExist = await UserModel.findOne({ _id: seller }).lean();
+    if (!isSellerExist)
+      return ResponseService.failed(res, "Seller not exist", StatusCode.badRequest);
+
     const isReviewExist = await reviewModel.findOne({ user: isTokenValid._id, seller });
     if (isReviewExist)
       return ResponseService.failed(
@@ -30,10 +38,34 @@ module.exports.addReview = async (req, res) => {
     const validReview = new reviewModel(newReview);
     const result = await validReview.save();
 
-    return ResponseService.success(res, `Review submitted successfully`, result);
+    console.log(isSellerExist.email);
+
+    const mailOptions = {
+      from: "Manish Mittal <devmanishmittal@gmail.com>",
+      to: isSellerExist.email,
+      subject: "New Review",
+      html: `<p style="font-size: 16px;">
+      Hi ${isSellerExist.name}
+      <br/>
+      You have received a new Review from ${user.name}
+      <br/>
+      Visit <a href="autotitanic.com">autotitanic.com</a> to read the review and respond to the reviewer<br/>
+      </p>
+    <br />`,
+    };
+
+    transporter.sendMail(mailOptions, async (erro, info) => {
+      if (erro) {
+        console.log("mail error", erro);
+        return ResponseService.serverError(res, erro);
+      }
+      return ResponseService.success(res, "Review submitted successfully", result);
+    });
+
+    // return ResponseService.success(res, `Review submitted successfully`, result);
   } catch (error) {
     console.log("api error", error);
-    return ResponseService.failed(res, error?.message || error, 400);
+    return ResponseService.serverError(res, error, 400);
   }
 };
 

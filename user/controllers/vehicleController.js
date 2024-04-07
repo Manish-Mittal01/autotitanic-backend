@@ -10,6 +10,7 @@ const { UserServices } = require("../../services/userServices");
 const UserModel = require("../../Models/UserModel");
 const cityModel = require("../../Models/cityModel");
 const reviewModel = require("../../Models/reviewModel");
+const offerModel = require("../../Models/offerModel");
 
 module.exports.addVehicle = async (req, res) => {
   try {
@@ -67,92 +68,13 @@ module.exports.addVehicle = async (req, res) => {
 module.exports.getAllvehicles = async (req, res) => {
   try {
     const token = req.headers["x-access-token"];
+    let { filters = {}, paginationDetails, listType } = req.body;
+    paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
     const isTokenValid = await UserServices.validateToken(token);
     // if (isTokenValid?.tokenExpired || !isTokenValid._id)
 
-    let { filters = {}, paginationDetails, listType } = req.body;
-    paginationDetails = paginationDetails || { page: 1, limit: 25 };
-
-    const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
-    const idFilters = ["make", "model", "city", "country", "user"];
-    let queryObj = {};
-
-    const keys = Object.keys(vehiclesModel.schema.paths); // Get all keys from the schema
-    const orConditions = keys
-      .map((key) => {
-        const condition = {};
-
-        const field = vehiclesModel.schema.paths[key];
-        const regex = new RegExp(filters.keyword, "i"); // 'i' flag for case-insensitive search
-
-        // Check if the field type
-        if (field.instance === "ObjectID" || field.instance instanceof mongoose.Types.ObjectId) {
-          // condition[`${key}._id`] = Types.ObjectId(filters[key]);
-        } else if (field.instance === "String") {
-          condition[key] = { $regex: regex };
-        } else if (field.instance === "Number") {
-          condition[key] = filters.keyword;
-        } else if (field.instance === "Array" && field.caster.instance === "String") {
-          condition[key] = { $in: [regex] };
-        }
-
-        return condition;
-      })
-      .filter((condition) => Object.keys(condition).length > 0);
-
-    queryObj = { $or: orConditions };
-
-    Object.keys(filters).forEach((filter) => {
-      const searchValue = filters[filter];
-      if (
-        searchValue.toString() &&
-        !extraFilters.includes(filter) &&
-        !idFilters.includes(filter) &&
-        filter !== "userType" &&
-        filter !== "keyword"
-      ) {
-        queryObj[filter] =
-          typeof searchValue === "string" ? { $regex: searchValue, $options: "i" } : searchValue;
-      }
-    });
-
-    if (filters.sellOrRent) {
-      queryObj.sellOrRent = { $regex: filters.sellOrRent, $options: "i" };
-    }
-
-    idFilters.forEach((filter) => {
-      if (filters[filter]) {
-        queryObj[`${filter}._id`] = Types.ObjectId(filters[filter]);
-      }
-    });
-    // listType
-    if (listType === "admin" && !filters.status) {
-      queryObj.status = { $ne: "draft" };
-    }
-    // userType
-    if (filters.userType) {
-      queryObj[`user.userType`] = { $regex: filters.userType, $options: "i" };
-    }
-
-    if (filters.minPrice || filters.maxPrice) {
-      queryObj.price = {
-        $gte: parseInt(filters.minPrice) || 0,
-        $lte: parseInt(filters.maxPrice || 9999999999),
-      };
-    }
-    if (filters.minYear || filters.maxYear) {
-      queryObj.year = {
-        $gte: parseInt(filters.minYear || 1930),
-        $lte: parseInt(filters.maxYear || new Date().getFullYear()),
-      };
-    }
-    if (filters.minMileage || filters.maxMileage) {
-      queryObj.mileage = {
-        $gte: parseInt(filters.minMileage || 0),
-        $lte: parseInt(filters.maxMileage || 999999),
-      };
-    }
+    const queryObj = myFilter(filters);
 
     let allVehicles = await vehiclesModel.aggregate([
       {
@@ -295,7 +217,7 @@ module.exports.getAllvehicles = async (req, res) => {
         $skip: (Number(paginationDetails.page) - 1) * paginationDetails.limit,
       },
       {
-        $limit: paginationDetails.limit,
+        $limit: Number(paginationDetails.limit),
       },
     ]);
 
@@ -677,24 +599,29 @@ module.exports.deleteVehicle = async (req, res) => {
 module.exports.makeOffer = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
-      const { currency, price, vehicleId, whatsapp, call, email } = req.body;
-
+      const { currency, price, vehicleId, whatsapp, call, email, comment } = req.body;
       const token = req.headers["x-access-token"];
 
       const isTokenValid = await UserServices.validateToken(token);
       if (isTokenValid?.tokenExpired || !isTokenValid._id)
         return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
-      if (!vehicleId) return ResponseService.failed(res, "id is required", StatusCode.notFound);
-      const isValidId = Types.ObjectId.isValid(vehicleId);
-      if (!isValidId)
-        return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
+      const validationError = checkRequiredFields({ currency, price, vehicleId });
+      if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
       const details = await vehiclesModel.findOne({ _id: vehicleId }).populate("user");
-      const user = await UserModel.findOne({ _id: isTokenValid._id });
-
-      if (!user) return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
       if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
+
+      const user = await UserModel.findOne({ _id: isTokenValid._id });
+      if (!user) return ResponseService.failed(res, "User not found", StatusCode.notFound);
+
+      const newOffer = new offerModel({
+        user: isTokenValid._id,
+        vehicle: vehicleId,
+        offer: `${currency} ${price}`,
+        comment: comment,
+      });
+      const result = await newOffer.save();
 
       const mailOptions = {
         from: "Manish Mittal <devmanishmittal@gmail.com>", // Something like: Jane Doe <janedoe@gmail.com>
@@ -715,13 +642,16 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
       ${email && user.email ? "Email: " + user.email : ""}<br/>
       ${call && user.mobile ? "Call: " + user.mobile : ""}<br/>
       ${whatsapp && user.whatsapp ? "Whatsapp: " + user.whatsapp : ""}
-      </p>`, // email content in HTML
+      </p>
+      <br/><br/>
+      ${comment ? "Other Comment:" + comment : ""}
+      `,
       };
 
       // returning result
       return transporter.sendMail(mailOptions, (erro, info) => {
         if (erro) return ResponseService.failed(res, erro.toString(), StatusCode.badRequest);
-        else return ResponseService.success(res, "Offer sent successfully", {});
+        else return ResponseService.success(res, "Offer sent successfully", result);
       });
     } catch (error) {
       console.log("error", error);
@@ -733,7 +663,6 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
 const myFilter = (filters) => {
   const extraFilters = ["minPrice", "maxPrice", "minYear", "maxYear", "minMileage", "maxMileage"];
   const idFilters = ["make", "model", "city", "country", "user"];
-
   let queryObj = {};
 
   const keys = Object.keys(vehiclesModel.schema.paths); // Get all keys from the schema
@@ -775,18 +704,28 @@ const myFilter = (filters) => {
     }
   });
 
+  if (filters.sellOrRent) {
+    queryObj.sellOrRent = { $regex: filters.sellOrRent, $options: "i" };
+  }
+
   idFilters.forEach((filter) => {
     if (filters[filter]) {
       queryObj[`${filter}._id`] = Types.ObjectId(filters[filter]);
     }
   });
 
-  if (!filters.price) {
+  // userType
+  if (filters.userType) {
+    queryObj[`user.userType`] = { $regex: filters.userType, $options: "i" };
+  }
+
+  if (!filters.price && (filters.minPrice || filters.maxPrice)) {
     queryObj.price = {
       $gte: parseInt(filters.minPrice) || 0,
       $lte: parseInt(filters.maxPrice || 9999999999),
     };
   }
+
   if (!filters.year && (filters.minYear || filters.maxYear)) {
     queryObj.year = {
       $gte: parseInt(filters.minYear || 1930),
@@ -802,10 +741,6 @@ const myFilter = (filters) => {
 
   if (!filters.user && !filters.status) {
     queryObj.status = { $ne: "draft" };
-  }
-
-  if (filters.userType) {
-    queryObj[`user.userType`] = { $regex: filters.userType, $options: "i" };
   }
 
   return queryObj;

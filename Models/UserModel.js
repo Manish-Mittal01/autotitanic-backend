@@ -31,7 +31,7 @@ const userSchema = Schema(
     },
     userType: {
       type: String,
-      enum: ["private", "dealer"],
+      enum: ["private", "dealer", "admin"],
       required: true,
     },
     country: {
@@ -45,11 +45,6 @@ const userSchema = Schema(
     userAvatar: {
       type: String,
     },
-    isAdmin: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
   },
   { timestamps: true, versionKey: false }
 );
@@ -62,8 +57,8 @@ userSchema.methods.generateJWT = function () {
       email: this.email,
       userType: this.userType,
     },
-    process.env.JWT_SECRET_KEY,
-    { expiresIn: "7d" }
+    process.env.JWT_SECRET_KEY
+    // { expiresIn: "7d" }
   );
   return token;
 };
