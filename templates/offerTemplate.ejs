@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Document</title>
+</head>
+
+<body>
+    <div>
+        <p>Dear User,</p>
+        <p>Dear <%= vehicle.user.name %>,</p>
+
+        <p>We have great news for you.</p>
+        <p>You have received an offer for your post at www.autotitanic.com. <%= user.name %> has showed interest in your
+                <%= vehicle?.type.slice( 0, -1 ) %>
+                    and
+                    has offered <%= req.currency req.price %> GH¢2800O.</p>
+        <p>Please reply to <%= user.name %> on:</p>
+
+        Email:
+        Call:
+        WhatsApp:
+
+        <p>Best wishes with your transaction with Nana.</p>
+        <p>Kind regards,</p>
+        <p>AutoTitanic team</p>
+    </div>
+</body>
+
+</html>

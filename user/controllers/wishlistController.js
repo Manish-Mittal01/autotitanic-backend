@@ -21,15 +21,14 @@ module.exports.addToWishlist = async (req, res) => {
     if (isVehicleExist)
       return ResponseService.failed(res, "Vehicle already exist", StatusCode.forbidden);
 
-    const compareList = await wishlistmodel.countDocuments({ user: isTokenValid._id });
-
-    if (compareList >= 21) {
-      return ResponseService.failed(
-        res,
-        "You can only add up to 20 items in the list",
-        StatusCode.forbidden
-      );
-    }
+    // const wishlistCount = await wishlistmodel.countDocuments({ user: isTokenValid._id });
+    // if (wishList >= 21) {
+    //   return ResponseService.failed(
+    //     res,
+    //     "You can only add up to 20 items in the list",
+    //     StatusCode.forbidden
+    //   );
+    // }
 
     const newVehicle = { vehicle: id, user: isTokenValid._id };
     const addedVehicle = new wishlistmodel(newVehicle);
@@ -44,6 +43,7 @@ module.exports.addToWishlist = async (req, res) => {
 
 module.exports.getWishlist = async (req, res) => {
   try {
+    const { page = 1, limit = 10 } = req.body;
     const token = req.headers["x-access-token"];
 
     const isTokenValid = await UserServices.validateToken(token);
@@ -51,16 +51,25 @@ module.exports.getWishlist = async (req, res) => {
     if (isTokenValid?.tokenExpired || !isTokenValid._id)
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
-    const wishlist = await wishlistmodel.find({ user: isTokenValid._id }).populate({
-      path: "user vehicle",
-      populate: {
-        path: "make model city country user",
-        // path: "make model variant city country user",
-        strictPopulate: false,
-      },
-    });
+    const wishlist = await wishlistmodel
+      .find({ user: isTokenValid._id })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate({
+        path: "user vehicle",
+        populate: {
+          path: "make model city country user",
+          // path: "make model variant city country user",
+          strictPopulate: false,
+        },
+      });
 
-    return ResponseService.success(res, "Vehicle details found", wishlist);
+    const wishlistCount = await wishlistmodel.countDocuments({ user: isTokenValid._id });
+
+    return ResponseService.success(res, "Vehicle details found", {
+      items: wishlist,
+      totalCount: wishlistCount,
+    });
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);

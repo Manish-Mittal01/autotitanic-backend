@@ -51,6 +51,7 @@ const {
   deleteVehicle,
   makeOffer,
   getResultCountByFilter,
+  getRelatedvehicles,
 } = require("../user/controllers/vehicleController");
 
 // user import
@@ -144,6 +145,7 @@ router.route("/vehicleDetails/:vehicleId").get(getVehicleDetails);
 router.route("/updateVehicle/:id").post(updateVehicle);
 router.route("/deleteVehicle/:id").post(deleteVehicle);
 router.route("/makeOffer").post(makeOffer);
+router.route("/getRelatedvehicles").post(getRelatedvehicles);
 
 //Review
 router.route("/addReview").post(addReview);
@@ -159,7 +161,7 @@ router.route("/removeCompareListItem").post(removeCompareListItem);
 
 //user wishlist
 router.route("/addToWishlist").post(addToWishlist);
-router.route("/getWishlist").get(getWishlist);
+router.route("/getWishlist").post(getWishlist);
 router.route("/removewishlistItem").post(removewishlistItem);
 
 //admin

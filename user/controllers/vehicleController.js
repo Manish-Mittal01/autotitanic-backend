@@ -1,4 +1,6 @@
 const functions = require("firebase-functions");
+const ejs = require("ejs");
+const path = require("path");
 const cors = require("cors")({ origin: true });
 const { transporter } = require("../../firebaseConfig");
 const { Types, default: mongoose } = require("mongoose");
@@ -609,7 +611,7 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
       const validationError = checkRequiredFields({ currency, price, vehicleId });
       if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-      const details = await vehiclesModel.findOne({ _id: vehicleId }).populate("user");
+      const details = await vehiclesModel.findOne({ _id: vehicleId }).populate("user").lean();
       if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
 
       const user = await UserModel.findOne({ _id: isTokenValid._id });
@@ -623,29 +625,43 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
       });
       const result = await newOffer.save();
 
+      // const templateData = { req: req.body, vehicle: details, user: user };
+      // const template = await ejs.renderFile(
+      //   path.join(__dirname, "..", "..", "templates", "offerTemplate.ejs"),
+      //   templateData,
+      //   { async: true }
+      // );
+
       const mailOptions = {
         from: "Manish Mittal <devmanishmittal@gmail.com>", // Something like: Jane Doe <janedoe@gmail.com>
         to: details.user.email,
         subject: "Autotitanic Post Offer", // email subject
-        html: `<p style="font-size: 16px;">Hello ${details.user.name}
-        <br/>
-      We have Great news
-      <br/><br/>
-      Hurray!! You got an offer on your post at <a href="manishmittal.tech">manishmittal.tech</a>. ${
-        user.name
-      } showed interest in your post and offers ${currency} ${price} for your ${details.type.slice(
+        // html: template,
+        html: `<p style="font-size: 16px;">
+          Dear ${details.user.name}
+          <br/>
+        We have Great news for you.
+        <br/><br/>
+        You have received an offer for your post at <a href="www.autotitanic.com">www.autotitanic.com</a>. ${
+          user.name
+        } has showed interest in your ${details.type.slice(
           0,
           -1
-        )}.
+        )} and has offered ${currency} ${price}.
+          <br/><br/>
+          Please reply to ${user.name} on:<br/>
+        ${email && user.email ? "Email: " + user.email : ""}<br/>
+        ${call && user.mobile ? "Call: " + user.mobile : ""}<br/>
+        ${whatsapp && user.whatsapp ? "Whatsapp: " + user.whatsapp : ""}
+        </p>
         <br/><br/>
-      You can contact ${user.name} on:<br/>
-      ${email && user.email ? "Email: " + user.email : ""}<br/>
-      ${call && user.mobile ? "Call: " + user.mobile : ""}<br/>
-      ${whatsapp && user.whatsapp ? "Whatsapp: " + user.whatsapp : ""}
-      </p>
-      <br/><br/>
-      ${comment ? "Other Comment:" + comment : ""}
-      `,
+        ${comment ? "Other Comment:" + comment : ""}
+        <br/><br/>
+        Best wishes with your transaction with Nana.
+        <br/><br/>
+        Kind regards,
+        AutoTitanic team
+        `,
       };
 
       // returning result
@@ -744,4 +760,234 @@ const myFilter = (filters) => {
   }
 
   return queryObj;
+};
+
+module.exports.getRelatedvehicles = async (req, res) => {
+  try {
+    let { limit = 60, _id } = req.body;
+
+    if (!_id) return ResponseService.failed(res, "No vehicle ID provided", StatusCode.badRequest);
+
+    const vehicle = await vehiclesModel.findOne({ _id: _id }).lean();
+    if (!vehicle) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
+
+    let {
+      type,
+      sellOrRent,
+      country,
+      make,
+      model,
+      gearBox,
+      mileage,
+      bodyStyle,
+      category,
+      subCategory,
+      birth,
+      condition,
+      year,
+      engineSize,
+      fuelType,
+      enginePower,
+      price,
+    } = vehicle;
+
+    const queryObj = {
+      type: type,
+      sellOrRent: sellOrRent,
+      "country._id": Types.ObjectId(country),
+      "make._id": Types.ObjectId(make),
+      "model._id": Types.ObjectId(model),
+    };
+
+    const matchingScorePipe = [];
+    if (sellOrRent === "sell") {
+      if (["cars", "vans", "motorhomes"].includes(type)) {
+        matchingScorePipe.push({ $cond: { if: { $eq: ["$gearBox", gearBox] }, then: 1, else: 0 } });
+
+        for (let i = 1; i <= 10; i++) {
+          matchingScorePipe.push({
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$mileage", { $add: [mileage, mileage * (i / 10)] }] },
+                  { $eq: ["$mileage", { $subtract: [mileage, mileage * (i / 10)] }] },
+                ],
+              },
+              then: (10 - i) / 10,
+              else: 0,
+            },
+          });
+        }
+      } else if (type === "bikes") {
+        matchingScorePipe.push({
+          $cond: { if: { $eq: ["$bodyStyle", bodyStyle] }, then: 1, else: 0 },
+        });
+
+        for (let i = 1; i <= 10; i++) {
+          matchingScorePipe.push({
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$mileage", { $add: [mileage, mileage * (i / 10)] }] },
+                  { $eq: ["$mileage", { $subtract: [mileage, mileage * (i / 10)] }] },
+                ],
+              },
+              then: (10 - i) / 10,
+              else: 0,
+            },
+          });
+        }
+      } else if (["trucks", "farms", "plants"].includes(type)) {
+        matchingScorePipe.push({
+          $cond: { if: { $eq: ["$category", category] }, then: 1, else: 0 },
+        });
+
+        for (let i = 1; i <= 10; i++) {
+          matchingScorePipe.push({
+            $cond: {
+              if: {
+                $or: [
+                  { $eq: ["$mileage", { $add: [mileage, mileage * (i / 10)] }] },
+                  { $eq: ["$mileage", { $subtract: [mileage, mileage * (i / 10)] }] },
+                ],
+              },
+              then: (10 - i) / 10,
+              else: 0,
+            },
+          });
+        }
+      } else if (type === "caravans") {
+        matchingScorePipe.push(
+          { $cond: { if: { $eq: ["$category", category] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$birth", birth] }, then: 1, else: 0 } }
+        );
+      } else if (type === "partAndAccessories") {
+        matchingScorePipe.push(
+          { $cond: { if: { $eq: ["$category", category] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$condition", condition] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$subCategory", subCategory] }, then: 1, else: 0 } }
+        );
+      }
+    } else if (sellOrRent === "rent") {
+      for (let i = 1; i <= 10; i++) {
+        matchingScorePipe.push({
+          $cond: {
+            if: {
+              $or: [
+                { $eq: ["$year", { $add: [year, i] }] },
+                { $eq: ["$year", { $subtract: [year, i] }] },
+              ],
+            },
+            then: (10 - i) / 10,
+            else: 0,
+          },
+        });
+      }
+
+      if (type === "cars") {
+        matchingScorePipe.push(
+          { $cond: { if: { $eq: ["$gearBox", gearBox] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$engineSize", engineSize] }, then: 1, else: 0 } }
+        );
+      } else if (type === "vans" || type === "motorhomes") {
+        matchingScorePipe.push(
+          { $cond: { if: { $eq: ["$gearBox", gearBox] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$fuelType", fuelType] }, then: 1, else: 0 } }
+        );
+      } else if (type === "bikes") {
+        matchingScorePipe.push(
+          { $cond: { if: { $eq: ["$enginePower", enginePower] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$bodyStyle", bodyStyle] }, then: 1, else: 0 } }
+        );
+      } else if (type === "caravans") {
+        matchingScorePipe.push(
+          { $cond: { if: { $eq: ["$birth", birth] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$category", category] }, then: 1, else: 0 } }
+        );
+      } else if (type === "farms") {
+        matchingScorePipe.push({
+          $cond: { if: { $eq: ["$fuelType", fuelType] }, then: 1, else: 0 },
+        });
+      } else if (type === "plants") {
+        matchingScorePipe.push(
+          { $cond: { if: { $eq: ["$category", category] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$fuelType", fuelType] }, then: 1, else: 0 } }
+        );
+      } else if (type === "enginePower") {
+        matchingScorePipe.push(
+          { $cond: { if: { $eq: ["$enginePower", enginePower] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$fuelType", fuelType] }, then: 1, else: 0 } }
+        );
+      }
+    }
+
+    let allVehicles = await vehiclesModel.aggregate([
+      {
+        $lookup: {
+          from: "countries",
+          localField: "country",
+          foreignField: "_id",
+          as: "country",
+        },
+      },
+      { $unwind: { path: "$country", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "cities",
+          localField: "city",
+          foreignField: "_id",
+          as: "city",
+        },
+      },
+      { $unwind: { path: "$city", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "makes",
+          localField: "make",
+          foreignField: "_id",
+          as: "make",
+        },
+      },
+      { $unwind: { path: "$make", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $lookup: {
+          from: "models",
+          localField: "model",
+          foreignField: "_id",
+          as: "model",
+        },
+      },
+      { $unwind: { path: "$model", includeArrayIndex: "0", preserveNullAndEmptyArrays: true } },
+      {
+        $match:
+          type === "partAndAccessories"
+            ? { ...queryObj, subCategory: subCategory }
+            : { ...queryObj },
+      },
+      {
+        $addFields: {
+          matchingScore: {
+            $sum: matchingScorePipe,
+          },
+        },
+      },
+      {
+        $sort: { matchingScore: -1 },
+      },
+      {
+        $limit: Number(limit),
+      },
+    ]);
+
+    const vehicleCount = allVehicles.length;
+    const response = {
+      items: allVehicles,
+      totalCount: vehicleCount,
+    };
+
+    return ResponseService.success(res, "Vehicles list found successfully", response);
+  } catch (error) {
+    console.log("error in vehicle list", error);
+    return ResponseService.failed(res, "Something wrong happened");
+  }
 };
