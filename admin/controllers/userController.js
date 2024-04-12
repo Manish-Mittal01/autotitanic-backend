@@ -1,7 +1,19 @@
 const { Types } = require("mongoose");
+const nodemailer = require("nodemailer");
 const User = require("../../Models/UserModel");
 const { ResponseService } = require("../../common/responseService");
 const { StatusCode } = require("../../common/Constants");
+const { checkRequiredFields } = require("../../common/utility");
+
+let transporter = nodemailer.createTransport({
+  host: "smtp.hostinger.com",
+  port: 465,
+  secure: true, // true for 465, false for other ports
+  auth: {
+    user: "no-reply@manishmittal.tech",
+    pass: "Mittal@938",
+  },
+});
 
 module.exports.allUsers = async (req, res) => {
   const { page = 1, limit = 10, status, search, country } = req.body;
@@ -58,5 +70,41 @@ module.exports.blockUser = async (req, res) => {
     return ResponseService.success(res, "user status updated", result);
   } catch (error) {
     return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+  }
+};
+
+module.exports.sendEmailToUsers = async (req, res) => {
+  try {
+    let { message, users, title } = req.body;
+
+    const validationError = checkRequiredFields({ message, users, title });
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
+
+    if (users === "all") {
+      const allUsers = await User.find().select("email").lean();
+      if (allUsers.length > 0) {
+        users = [];
+        for await (let user of allUsers) {
+          users.push(user.email);
+        }
+      }
+    }
+
+    users = users.slice(0, 100); // limit to max 100 emails at a time
+
+    var mailOptions = {
+      from: "no-reply@manishmittal.tech",
+      // to: "mittalmanish2000@gmail.com",
+      bcc: users,
+      subject: title,
+      text: message,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+
+    return ResponseService.success(res, "mail sent successfully!", users);
+  } catch (error) {
+    console.log("error", error);
+    return ResponseService.serverError(res, error, StatusCode.srevrError);
   }
 };

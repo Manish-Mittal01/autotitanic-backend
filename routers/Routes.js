@@ -90,7 +90,7 @@ const {
   updateData,
   uploadModel,
 } = require("../common/dataUploadFunctions");
-const { allUsers, blockUser } = require("../admin/controllers/userController");
+const { allUsers, blockUser, sendEmailToUsers } = require("../admin/controllers/userController");
 const {
   getUserAnalytics,
   getVehicleAnalytics,
@@ -223,5 +223,6 @@ router.route("/getBanner").post(getBanner);
 router.route("/uploadFiles").post(upload.array("images"), uploadFiles);
 router.route("/getContentPage/:pageId").get(getContentPage);
 router.route("/getContentPageList").get(getContentPageList);
+router.route("/sendEmailToUsers").post(sendEmailToUsers);
 
 module.exports = router;
