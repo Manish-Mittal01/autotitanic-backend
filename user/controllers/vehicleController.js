@@ -639,7 +639,7 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
         // html: template,
         html: `<p style="font-size: 16px;">
           Dear ${details.user.name}
-          <br/>
+          <br/><br/>
         We have Great news for you.
         <br/><br/>
         You have received an offer for your post at <a href="www.autotitanic.com">www.autotitanic.com</a>. ${
@@ -653,15 +653,16 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
         ${email && user.email ? "Email: " + user.email : ""}<br/>
         ${call && user.mobile ? "Call: " + user.mobile : ""}<br/>
         ${whatsapp && user.whatsapp ? "Whatsapp: " + user.whatsapp : ""}
-        </p>
+       
         <br/><br/>
-        ${comment ? "Other Comment:" + comment : ""}
+        ${comment ? "Message:" + comment : ""}
         <br/><br/>
         Best wishes with your transaction with Nana.
         <br/><br/>
         Kind regards,
+        <br/>
         AutoTitanic team
-        `,
+        </p>   `,
       };
 
       // returning result

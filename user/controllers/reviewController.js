@@ -13,7 +13,6 @@ module.exports.addReview = async (req, res) => {
     const token = req.headers["x-access-token"];
 
     const isTokenValid = await UserServices.validateToken(token);
-    // console.log("isTokenValid", isTokenValid);
     if (isTokenValid?.tokenExpired || !isTokenValid._id)
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
@@ -38,20 +37,21 @@ module.exports.addReview = async (req, res) => {
     const validReview = new reviewModel(newReview);
     const result = await validReview.save();
 
-    console.log(isSellerExist.email);
-
     const mailOptions = {
       from: "Manish Mittal <devmanishmittal@gmail.com>",
       to: isSellerExist.email,
       subject: "New Review",
       html: `<p style="font-size: 16px;">
-      Hi ${isSellerExist.name}
-      <br/>
+      Hey ${isSellerExist.name},
+      <br/><br/>
       You have received a new Review from ${user.name}
-      <br/>
-      Visit <a href="autotitanic.com">autotitanic.com</a> to read the review and respond to the reviewer<br/>
-      </p>
-    <br />`,
+      <br/><br/>
+      Please Visit <a href="autotitanic.com">autotitanic.com</a> to view and respond as necessary.
+      <br/><br/>
+      Kind regards,
+      <br/><br/>
+      Autotitanic.com
+      </p>`,
     };
 
     transporter.sendMail(mailOptions, async (erro, info) => {
@@ -71,12 +71,19 @@ module.exports.addReview = async (req, res) => {
 
 module.exports.getReviews = async (req, res) => {
   try {
-    const { seller, sortBy, order, pagination = {} } = req.body;
-    const { limit = 10, page = 1 } = pagination;
+    const { seller, user, sortBy = "_id", order = -1, limit = 10, page = 1 } = req.body;
+
+    const queryObj = {};
+    if (seller) {
+      queryObj.seller = Types.ObjectId(seller);
+    }
+    if (user) {
+      queryObj.user = Types.ObjectId(user);
+    }
 
     const reviews = await reviewModel.aggregate([
       {
-        $match: { seller: Types.ObjectId(seller) },
+        $match: queryObj,
       },
       {
         $lookup: {
@@ -119,12 +126,12 @@ module.exports.getReviews = async (req, res) => {
         },
       },
       { $project: { likes: 0, dislikes: 0, replies: 0 } },
-      { $sort: sortBy ? { [sortBy]: order } : { _id: 1 } },
+      { $sort: { [sortBy]: order } },
       { $skip: (Number(page) - 1) * limit },
       { $limit: limit },
     ]);
 
-    const reviewsCount = await reviewModel.countDocuments({ seller });
+    const reviewsCount = await reviewModel.countDocuments({ ...queryObj });
     let rating = (
       reviews.reduce((acc, curr) => acc + Number(curr.rating), 0) / reviews.length || 0
     ).toFixed(1);
@@ -211,6 +218,57 @@ module.exports.manageLikes = async (req, res) => {
   }
 };
 
+module.exports.manageLikesOnreply = async (req, res) => {
+  try {
+    const { replyId, action } = req.body;
+
+    const token = req.headers["x-access-token"];
+    const isTokenValid = await UserServices.validateToken(token);
+    if (isTokenValid?.tokenExpired || !isTokenValid._id)
+      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
+    const user = isTokenValid._id;
+
+    const validationError = checkRequiredFields({ replyId, user, action });
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
+
+    if (action !== "like" && action !== "dislike")
+      return ResponseService.failed(res, "invalid action", StatusCode.badRequest);
+
+    const isReplyExist = await reviewModel.findOne({ "replies._id": replyId });
+    if (!isReplyExist) return ResponseService.failed(res, "invalid replyId", StatusCode.badRequest);
+
+    const isResponseExist = await reviewModel.findOne({
+      "replies._id": replyId,
+      $or: [{ "replies.likes.user": user }, { "replies.dislikes.user": user }],
+    });
+
+    if (isResponseExist) {
+      await reviewModel.updateOne(
+        { "replies._id": replyId },
+        {
+          $pull: {
+            "replies.$.likes": { user: user },
+            "replies.$.dislikes": { user: user },
+          },
+        }
+      );
+    }
+
+    const result = await reviewModel.updateOne(
+      { "replies._id": replyId },
+      {
+        $push:
+          action === "like" ? { "replies.$.likes": { user } } : { "replies.$.dislikes": { user } },
+      }
+    );
+
+    return ResponseService.success(res, "like updated", result);
+  } catch (error) {
+    console.log("error", error);
+    return ResponseService.failed(res, error?.message || error, StatusCode.serverError);
+  }
+};
+
 module.exports.addReply = async (req, res) => {
   try {
     const { reviewId, reply } = req.body;
@@ -259,13 +317,15 @@ module.exports.getAllReply = async (req, res) => {
           _id: Types.ObjectId(reviewId),
         },
       },
-      {
-        $project: {
-          replies: {
-            $slice: ["$replies", limit * (page - 1), limit],
-          },
-        },
-      },
+
+      //pagination
+      // {
+      //   $project: {
+      //     replies: {
+      //       $slice: ["$replies", limit * (page - 1), limit],
+      //     },
+      //   },
+      // },
       { $unwind: "$replies" },
       {
         $lookup: {
@@ -286,6 +346,22 @@ module.exports.getAllReply = async (req, res) => {
       },
       { $unwind: "$replies.user.country" },
       {
+        $addFields: {
+          "replies.likesCount": {
+            $cond: [{ $isArray: "$replies.likes" }, { $size: "$replies.likes" }, 0],
+          },
+          "replies.dislikesCount": {
+            $cond: [{ $isArray: "$replies.dislikes" }, { $size: "$replies.dislikes" }, 0],
+          },
+        },
+      },
+      {
+        $project: {
+          "replies.likes": 0,
+          "replies.dislikes": 0,
+        },
+      },
+      {
         $group: {
           _id: "$_id",
           replies: { $push: "$replies" },
@@ -297,7 +373,7 @@ module.exports.getAllReply = async (req, res) => {
       items: myData[0]?.replies || [],
     };
 
-    return ResponseService.success(res, "User added", response);
+    return ResponseService.success(res, "Reply list found", response);
   } catch (error) {
     console.log("error", error);
     return ResponseService.failed(res, error?.message || error, StatusCode.serverError);

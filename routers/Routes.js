@@ -101,6 +101,7 @@ const {
   manageLikes,
   addReply,
   getAllReply,
+  manageLikesOnreply,
 } = require("../user/controllers/reviewController");
 const { addQuery } = require("../user/controllers/queryController");
 const { allQuery, updateQuery } = require("../admin/controllers/queryController");
@@ -151,6 +152,7 @@ router.route("/getRelatedvehicles").post(getRelatedvehicles);
 router.route("/addReview").post(addReview);
 router.route("/getReviews").post(getReviews);
 router.route("/manageLikes").post(manageLikes);
+router.route("/manageLikes/reply").post(manageLikesOnreply);
 router.route("/addReply").post(addReply);
 router.route("/getAllReply").post(getAllReply);
 

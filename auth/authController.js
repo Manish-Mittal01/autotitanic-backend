@@ -229,12 +229,11 @@ module.exports.login = async (req, res) => {
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 
     if (user.email === email && isPasswordCorrect) {
-      console.log("user.status", user.status === "inactive");
       if (user.status === "inactive") {
         return ResponseService.failed(res, "Verify email before login", StatusCode.forbidden);
       }
       const token = user.generateJWT(user);
-      return ResponseService.success(res, "Login Successful", { token });
+      return ResponseService.success(res, "Login Successful", { token, userId: user._id });
     } else {
       return ResponseService.failed(res, "Incorrect Email or Password", StatusCode.unauthorized);
     }
