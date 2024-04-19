@@ -18,6 +18,10 @@ const makeSchema = Schema(
       type: Boolean,
       default: false,
     },
+    isPopular: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true, versionKey: false }
 );
