@@ -67,7 +67,7 @@ module.exports.register = async (req, res) => {
       subject: "Verify email",
       html: `<p style="font-size: 16px;">
       Click on the link below  to verify your account on autotitanic.com<br/>
-        <a href="http://localhost:3000/verify/email?token=${emailToken}&email=${email}">
+        <a href="${process.env.EMAIL_VERIFICATION_LINK}verify/email?token=${emailToken}&email=${email}">
         Click here to Verify your email
         <a/>
       </p>
@@ -182,7 +182,7 @@ module.exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.body;
 
-    if (!token) return ResponseService.failed(res, "toen is required", StatusCode.badRequest);
+    if (!token) return ResponseService.failed(res, "token is required", StatusCode.badRequest);
 
     const isTokenValid = await UserServices.validateToken(token);
     if (isTokenValid?.tokenExpired || !isTokenValid.email)
@@ -195,7 +195,7 @@ module.exports.verifyEmail = async (req, res) => {
     otpHolder = otpHolder.pop();
 
     if (isTokenValid.otp !== otpHolder.otp)
-      return ResponseService.failed(res, "Invalid link", StatusCode.badRequest);
+      return ResponseService.failed(res, "Invalid token", StatusCode.badRequest);
 
     const result = await UserModel.updateOne({ email: isTokenValid.email }, { status: "active" });
 
@@ -392,7 +392,6 @@ module.exports.updateUserProfile = async (req, res) => {
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
     const userExist = await UserModel.findOne({ _id });
-
     if (!userExist) return ResponseService.failed(res, "User not found", StatusCode.notFound);
 
     const newUser = {

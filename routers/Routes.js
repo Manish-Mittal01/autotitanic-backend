@@ -119,15 +119,15 @@ router.route("/uploadCurrencyAndCode").get(uploadCurrencyAndCode);
 router.route("/updateData").get(updateData);
 
 //auth
-router.route("/login").post(login);
 router.route("/register").post(register);
-router.route("/sendOtp").post(sendOtp);
-router.route("/resetPassword").post(resetPassword);
-router.route("/changePassword").post(changePassword);
-router.route("/getUserProfile").get(getUserProfile);
-router.route("/updateUserProfile").post(updateUserProfile);
 router.route("/verifyEmail").post(verifyEmail);
 router.route("/resendVerificationEmail").post(resendVerificationEmail);
+router.route("/login").post(login);
+router.route("/resetPassword").post(resetPassword);
+router.route("/getUserProfile").get(getUserProfile);
+router.route("/updateUserProfile").post(updateUserProfile);
+router.route("/changePassword").post(changePassword);
+router.route("/sendOtp").post(sendOtp);
 
 //user
 //filters

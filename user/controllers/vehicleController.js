@@ -140,7 +140,6 @@ module.exports.getAllvehicles = async (req, res) => {
           as: "sellerReviews",
         },
       },
-
       {
         $lookup: {
           from: "wishlists",
@@ -172,7 +171,6 @@ module.exports.getAllvehicles = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-
       {
         $lookup: {
           from: "compares",
@@ -204,7 +202,6 @@ module.exports.getAllvehicles = async (req, res) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-
       {
         $match: {
           ...queryObj,
@@ -224,6 +221,7 @@ module.exports.getAllvehicles = async (req, res) => {
     ]);
 
     const vehicleCount = await getVehicleCount(filters);
+
     const response = {
       items: allVehicles,
       totalCount: vehicleCount,
@@ -232,13 +230,14 @@ module.exports.getAllvehicles = async (req, res) => {
     return ResponseService.success(res, "Vehicles list found successfully", response);
   } catch (error) {
     console.log("error in vehicle list", error);
-    return ResponseService.failed(res, "Something wrong happened");
+    return ResponseService.serverError(res, error);
   }
 };
 
 module.exports.getResultCount = async (req, res) => {
   try {
     let { filters } = req.body;
+    const queryObj = myFilter(filters);
 
     const vehicleCount = await getVehicleCount(filters);
     const response = {
@@ -248,7 +247,7 @@ module.exports.getResultCount = async (req, res) => {
     return ResponseService.success(res, "Count successful", response);
   } catch (error) {
     console.log("error", error);
-    return ResponseService.failed(res, "Something wrong happened");
+    return ResponseService.failed(res, error);
   }
 };
 
@@ -556,7 +555,7 @@ module.exports.getVehicleDetails = async (req, res) => {
     });
   } catch (error) {
     console.log("error", error);
-    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -688,10 +687,10 @@ const myFilter = (filters) => {
       const condition = {};
 
       const field = vehiclesModel.schema.paths[key];
-      const regex = new RegExp(filters.keyword, "i"); // 'i' flag for case-insensitive search
+      const regex = filters.keyword ? new RegExp(filters.keyword || "", "i") : "";
 
       // Check if the field type
-      if (field.instance === "ObjectID" || field.instance instanceof mongoose.Types.ObjectId) {
+      if (field.instance === "ObjectID" || field.instance instanceof Types.ObjectId) {
         // condition[`${key}._id`] = Types.ObjectId(filters[key]);
       } else if (field.instance === "String") {
         condition[key] = { $regex: regex };
@@ -989,6 +988,6 @@ module.exports.getRelatedvehicles = async (req, res) => {
     return ResponseService.success(res, "Vehicles list found successfully", response);
   } catch (error) {
     console.log("error in vehicle list", error);
-    return ResponseService.failed(res, "Something wrong happened");
+    return ResponseService.serverError(res, error);
   }
 };
