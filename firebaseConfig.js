@@ -13,14 +13,24 @@ const firebaseConfig = {
 
 module.exports.firebaseConfig = firebaseConfig;
 
+// let transporter = nodemailer.createTransport({
+//   service: "gmail",
+//   host: "smtp.gmail.com",
+//   port: 465,
+//   secure: true,
+//   auth: {
+//     user: "devmanishmittal@gmail.com",
+//     pass: "kzqz wwku cyzp zjjq",
+//   },
+// });
+
 let transporter = nodemailer.createTransport({
-  service: "gmail",
-  host: "smtp.gmail.com",
+  host: "smtp.hostinger.com",
   port: 465,
-  secure: true,
+  secure: true, // true for 465, false for other ports
   auth: {
-    user: "devmanishmittal@gmail.com",
-    pass: "kzqz wwku cyzp zjjq",
+    user: "no-reply@manishmittal.tech",
+    pass: "Mittal@938",
   },
 });
 

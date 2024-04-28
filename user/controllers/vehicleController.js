@@ -1,9 +1,7 @@
 const functions = require("firebase-functions");
-const ejs = require("ejs");
-const path = require("path");
 const cors = require("cors")({ origin: true });
 const { transporter } = require("../../firebaseConfig");
-const { Types, default: mongoose } = require("mongoose");
+const { Types } = require("mongoose");
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
@@ -237,7 +235,6 @@ module.exports.getAllvehicles = async (req, res) => {
 module.exports.getResultCount = async (req, res) => {
   try {
     let { filters } = req.body;
-    const queryObj = myFilter(filters);
 
     const vehicleCount = await getVehicleCount(filters);
     const response = {
@@ -606,6 +603,13 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
       const isTokenValid = await UserServices.validateToken(token);
       if (isTokenValid?.tokenExpired || !isTokenValid._id)
         return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
+
+      if (!whatsapp && !call && !email)
+        return ResponseService.failed(
+          res,
+          "Atleast one contact option is required",
+          StatusCode.badRequest
+        );
 
       const validationError = checkRequiredFields({ currency, price, vehicleId });
       if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);

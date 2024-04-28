@@ -253,7 +253,7 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
       if (!email || !isValidEmail)
         return ResponseService.failed(res, "Invalid email", StatusCode.forbidden);
 
-      const isUserExist = await UserModel.findOne({ email });
+      const isUserExist = await UserModel.findOne({ email }).lean();
       if (!isUserExist)
         return ResponseService.failed(res, "user does not exit", StatusCode.notFound);
 
@@ -275,7 +275,7 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
         // to: "devmanishmittal@gmail.com",
         subject: "Reset Password", // email subject
         html: `<div  style="font-size: 16px;">
-                <p>Dear ${isUserExist?.name?.splt(" ")?.[0] || "User"}</p>
+                <p>Dear ${isUserExist?.name?.split(" ")?.[0] || "User"}</p>
                 <br/>
                 <p>Your One Time Password (OTP) to reset your AutoTitanic account password is ${OTP}. This can only be used once and it is valid for 15 minutes.
                 </p>
