@@ -636,7 +636,7 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
       // );
 
       const mailOptions = {
-        from: "Manish Mittal <devmanishmittal@gmail.com>", // Something like: Jane Doe <janedoe@gmail.com>
+        from: "Manish Mittal <no-reply@manishmittal.tech>", // Something like: Jane Doe <janedoe@gmail.com>
         to: details.user.email,
         subject: "Autotitanic Post Offer", // email subject
         // html: template,
