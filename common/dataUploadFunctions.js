@@ -11,39 +11,77 @@ const vehiclesModel = require("../Models/vehiclesModel");
 
 module.exports.uploadMake = async (req, res) => {
   try {
-    const allMake = await makeModel.find().lean();
+    const allMake = await makeModel.find({ type: "cars" }).lean();
 
     //   Person.update({'items.id': 2}, {'$set': {
     //     'items.$.name': 'updated item2',
     //     'items.$.value': 'two updated'
     // }},
 
-    const makes = Object.keys(makeAndModels);
+    // const makes = Object.keys(makeAndModels);
 
-    for (let make of makes) {
-      const myMake = allMake.find((oldMake) => oldMake.label === make);
+    // for (let make of makes) {
+    //   const myMake = allMake.find((oldMake) => oldMake.label === make);
 
-      if (myMake) {
-        const result = await makeModel.updateOne(
-          { _id: myMake._id },
-          { $push: { type: "plants" } }
-        );
-      } else {
-        const label = make.toString();
-        const type = ["plants"];
+    //   if (myMake) {
+    //     const result = await makeModel.updateOne(
+    //       { _id: myMake._id },
+    //       { $push: { type: "plants" } }
+    //     );
+    //   } else {
+    //     const label = make.toString();
+    //     const type = ["plants"];
 
-        const newMake = { label, type };
-        const verifiedMake = new makeModel(newMake);
+    //     const newMake = { label, type };
+    //     const verifiedMake = new makeModel(newMake);
 
-        const result = await verifiedMake.save();
-      }
-    }
+    //     const result = await verifiedMake.save();
+    //   }
+    // }
 
-    const updatedMakes = await makeModel.find({ type: "plants" }).lean();
+    const myMake = await makeModel
+      .findOne({
+        label: "Volkswagen",
+        // type: "vans",
+      })
+      .lean();
+    console.log("myMake", myMake);
+    if (!myMake) return ResponseService.failed(res, "make not found", StatusCode.failed);
+
+    // Mercedes-Benz
+    // Toyota
+    // Volkswagen
+    // Citroen
+    // Fiat
+    // Ford
+    // IVECO
+    // Peugeot
+    // Vauxhall
+
+    // if (myMake.isPopular) {
+    //   console.log("first");
+    //   const result = await makeModel.updateOne(
+    //     { _id: myMake._id },
+    //     {
+    //       $push: {
+    //         isPopular: "vans",
+    //         type: "vans",
+    //       },
+    //     }
+    //   );
+    // } else {
+    //   console.log("sec");
+    //   const result = await makeModel.updateOne(
+    //     { _id: myMake._id },
+    //     { $set: { isPopular: ["vans"] } }
+    //   );
+    // }
+
+    const updatedMakes = await makeModel.find({ type: "vans", isPopular: "vans" }).lean();
 
     return ResponseService.success(res, "Updated", {
       items: updatedMakes,
-      count: updatedMakes.length,
+      // count: updatedMakes.length,
     });
   } catch (error) {
     console.log("error", error);

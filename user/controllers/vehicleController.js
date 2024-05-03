@@ -559,6 +559,7 @@ module.exports.getVehicleDetails = async (req, res) => {
 module.exports.updateVehicle = async (req, res) => {
   try {
     const { id } = req.params;
+    const { status } = req.body; //approved || rejected
 
     if (!id) return ResponseService.failed(res, "id is required", StatusCode.notFound);
     const isValidId = Types.ObjectId.isValid(id);
@@ -869,7 +870,9 @@ module.exports.getRelatedvehicles = async (req, res) => {
         matchingScorePipe.push(
           { $cond: { if: { $eq: ["$category", category] }, then: 1, else: 0 } },
           { $cond: { if: { $eq: ["$condition", condition] }, then: 1, else: 0 } },
-          { $cond: { if: { $eq: ["$subCategory", subCategory] }, then: 1, else: 0 } }
+          { $cond: { if: { $eq: ["$subCategory", subCategory] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$make", make] }, then: 1, else: 0 } },
+          { $cond: { if: { $eq: ["$model", model] }, then: 1, else: 0 } }
         );
       }
     } else if (sellOrRent === "rent") {

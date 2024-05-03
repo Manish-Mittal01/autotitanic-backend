@@ -56,7 +56,11 @@ module.exports.addMake = async (req, res) => {
     });
 
     if (isMakeExist) {
-      return ResponseService.failed(res, "Make with label already exits", StatusCode.forbidden);
+      return ResponseService.failed(
+        res,
+        "Make with label already exits. If you want to add for another category, update existing one",
+        StatusCode.forbidden
+      );
     }
 
     const result = await make.save();

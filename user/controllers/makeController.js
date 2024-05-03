@@ -20,9 +20,14 @@ module.exports.getAllMake = async (req, res) => {
 
     const totalCount = await makeModel.count();
 
+    const popularMakes = allMake.filter((make) =>
+      type ? make.isPopular?.includes(type) : make.isPopular?.length > 0
+    );
+
     const response = {
       items: allMake,
       totalCount: totalCount,
+      popularMakes: popularMakes,
     };
 
     return ResponseService.success(res, "Make list found successfully", response);
