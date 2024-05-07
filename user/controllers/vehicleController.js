@@ -565,10 +565,23 @@ module.exports.updateVehicle = async (req, res) => {
     const isValidId = Types.ObjectId.isValid(id);
     if (!isValidId) return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
 
-    const details = await vehiclesModel.findOne({ _id: id });
+    const details = await vehiclesModel.findOne({ _id: id }).populate("user").lean();
 
     if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
-    const result = await vehiclesModel.updateOne({ _id: id }, { ...req.body });
+    const result = await vehiclesModel.updateOne(
+      { _id: id },
+      { ...req.body, createdAt: status === "pending" ? new Date() : details.createdAt }
+    );
+
+    const message = `Your post has been ${status} on autotitanic`;
+    var mailOptions = {
+      from: "no-reply@manishmittal.tech",
+      to: details.user.email,
+      subject: "Autotitanic post",
+      text: message,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
 
     return ResponseService.success(res, "Vehicle updated", result);
   } catch (error) {
