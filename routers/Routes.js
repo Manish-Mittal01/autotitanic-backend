@@ -104,7 +104,12 @@ const {
   manageLikesOnreply,
 } = require("../user/controllers/reviewController");
 const { addQuery } = require("../user/controllers/queryController");
-const { allQuery, updateQuery } = require("../admin/controllers/queryController");
+const {
+  allQuery,
+  updateQuery,
+  addReplyToQuery,
+  getQueryDetails,
+} = require("../admin/controllers/queryController");
 const {
   addBanner,
   bannerList,
@@ -213,9 +218,15 @@ router.route("/getVehicleAnalytics/:filterType").get(getVehicleAnalytics);
 //content-page
 router.route("/updateContentPage").post(updateContentPage);
 router.route("/addContentPage").post(addContentPage);
+
+//queries
 router.route("/addQuery").post(addQuery);
 router.route("/allQuery").post(allQuery);
+router.route("/getQueryDetails/:id").get(getQueryDetails);
 router.route("/updateQuery").post(updateQuery);
+router.route("/replyQuery").post(addReplyToQuery);
+
+//banners
 router.route("/addBanner").post(addBanner);
 router.route("/bannerList").post(bannerList);
 router.route("/updateBanner").post(updateBanner);

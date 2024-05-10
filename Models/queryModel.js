@@ -23,8 +23,12 @@ const querySchema = Schema(
     },
     status: {
       type: String,
-      enum: ["actice", "closed", "inProgress"],
+      enum: ["active", "closed"],
       default: "active",
+    },
+    replies: {
+      type: [{ title: String, body: String }],
+      default: [],
     },
   },
   { timestamps: true, versionKey: false }

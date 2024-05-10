@@ -83,7 +83,6 @@ module.exports.getModelList = async (req, res) => {
 module.exports.addModel = async (req, res) => {
   try {
     const { label, type, make } = req.body;
-    console.log("label", label);
 
     const validationError = checkRequiredFields({
       label,
