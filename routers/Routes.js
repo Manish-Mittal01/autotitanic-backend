@@ -115,6 +115,18 @@ const {
   updateBanner,
   getBanner,
 } = require("../admin/controllers/bannerController");
+const {
+  addRole,
+  getRolesList,
+  updateRole,
+  deleteRole,
+} = require("../admin/controllers/rolesController");
+const {
+  addStaff,
+  updateStaff,
+  deleteStaff,
+  getStaffList,
+} = require("../admin/controllers/staffController");
 
 router.route("/uploadMake").get(uploadMake);
 router.route("/uploadModel").get(uploadModel);
@@ -230,6 +242,18 @@ router.route("/addBanner").post(addBanner);
 router.route("/bannerList").post(bannerList);
 router.route("/updateBanner").post(updateBanner);
 router.route("/getBanner").post(getBanner);
+
+//roles and permission
+router.route("/getRolesList").post(getRolesList);
+router.route("/addRole").post(addRole);
+router.route("/updateRole").post(updateRole);
+router.route("/deleteRole").post(deleteRole);
+
+//staff
+router.route("/getStaffList").post(getStaffList);
+router.route("/addStaff").post(addStaff);
+router.route("/updateStaff").post(updateStaff);
+router.route("/deleteStaff").post(deleteStaff);
 
 //common
 router.route("/uploadFiles").post(upload.array("images"), uploadFiles);

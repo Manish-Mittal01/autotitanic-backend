@@ -3,35 +3,27 @@ const jwt = require("jsonwebtoken");
 
 const staffSchema = Schema(
   {
-    mobile: {
+    firstName: {
       type: String,
       required: true,
     },
-    whatsapp: {
+    surname: {
       type: String,
     },
-    password: {
+    birthDate: {
       type: String,
       required: true,
     },
-    status: {
-      type: String,
-      enum: ["inactive", "active", "blocked"],
-      default: "inactive",
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    name: {
+    nationality: {
       type: String,
       required: true,
     },
-    userType: {
+    address: {
       type: String,
-      enum: ["private", "dealer", "admin"],
+      required: true,
+    },
+    city: {
+      type: String,
       required: true,
     },
     country: {
@@ -39,10 +31,48 @@ const staffSchema = Schema(
       required: true,
       ref: "countries",
     },
-    dealerLogo: {
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    mobile: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: Schema.Types.ObjectId,
+      ref: "roles",
+      required: true,
+    },
+    qualification: {
       type: String,
     },
-    userAvatar: {
+    employmentStatus: {
+      type: String,
+    },
+    socialSecurityNumber: {
+      type: String,
+    },
+    nextOfKin: {
+      type: String,
+    },
+    relationship: {
+      type: String,
+    },
+    emergencyEmail: {
+      type: String,
+    },
+    emergencyMobile: {
+      type: String,
+    },
+    emergencyCity: {
+      type: String,
+    },
+    emergencyCountry: {
+      type: String,
+    },
+    emergencyAddress: {
       type: String,
     },
   },
@@ -55,7 +85,7 @@ staffSchema.methods.generateJWT = function () {
       _id: this._id,
       mobile: this.mobile,
       email: this.email,
-      userType: this.userType,
+      role: this.role,
     },
     process.env.JWT_SECRET_KEY
     // { expiresIn: "7d" }
