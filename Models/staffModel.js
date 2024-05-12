@@ -14,22 +14,26 @@ const staffSchema = Schema(
       type: String,
       required: true,
     },
-    nationality: {
+    startDate: {
       type: String,
       required: true,
+    },
+    nationality: {
+      type: String,
     },
     address: {
       type: String,
       required: true,
     },
     city: {
-      type: String,
+      type: Schema.Types.ObjectId,
+      ref: "cities",
       required: true,
     },
     country: {
-      type: Types.ObjectId,
-      required: true,
+      type: Schema.Types.ObjectId,
       ref: "countries",
+      required: true,
     },
     email: {
       type: String,
@@ -62,18 +66,31 @@ const staffSchema = Schema(
     },
     emergencyEmail: {
       type: String,
+      required: true,
     },
     emergencyMobile: {
       type: String,
+      required: true,
     },
     emergencyCity: {
       type: String,
+      ref: "cities",
+      required: true,
     },
     emergencyCountry: {
       type: String,
+      ref: "countries",
+      required: true,
     },
     emergencyAddress: {
       type: String,
+      required: true,
+    },
+    status: {
+      type: String,
+      required: true,
+      enum: ["active", "deleted"],
+      default: "active",
     },
   },
   { timestamps: true, versionKey: false }

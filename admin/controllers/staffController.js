@@ -1,23 +1,50 @@
 const { StatusCode } = require("../../common/Constants");
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
-const rolesModel = require("../../Models/rolesModel");
 const staffModel = require("../../Models/staffModel");
 
 module.exports.addStaff = async (req, res) => {
   try {
-    const { name } = req.body;
+    const {
+      emergencyAddress,
+      emergencyEmail,
+      emergencyMobile,
+      emergencyCity,
+      emergencyCountry,
+      firstName,
+      birthDate,
+      address,
+      city,
+      country,
+      email,
+      mobile,
+      role,
+    } = req.body;
 
-    const validationError = checkRequiredFields({ name });
+    const validationError = checkRequiredFields({
+      emergencyAddress,
+      emergencyEmail,
+      emergencyMobile,
+      emergencyCity,
+      emergencyCountry,
+      firstName,
+      birthDate,
+      address,
+      city,
+      country,
+      email,
+      mobile,
+      role,
+    });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
-    const isRoleExist = await rolesModel.findOne({ name });
-    if (isRoleExist) return ResponseService.failed(res, "Role already exist");
+    const isStaffExist = await staffModel.findOne({ email });
+    if (isStaffExist) return ResponseService.failed(res, "Staff already exist with this email");
 
-    const newRole = new rolesModel({ name });
-    const result = await newRole.save();
+    const newStaff = new staffModel({ ...req.body });
+    const result = await newStaff.save();
 
-    return ResponseService.success(res, `Role added successfully`, result);
+    return ResponseService.success(res, `Staff registered successfully`, result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, error, 400);
@@ -26,18 +53,35 @@ module.exports.addStaff = async (req, res) => {
 
 module.exports.getStaffList = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { role, country, search } = req.body;
     const queryObj = {};
+    queryObj.status = { $ne: "deleted" };
 
-    if (status) {
-      queryObj.status = status;
+    if (role) {
+      queryObj.role = role;
+    }
+    if (country) {
+      queryObj.country = country;
+    }
+    if (search) {
+      queryObj["$or"] = [
+        {
+          firstName: { $regex: search || "", $options: "i" },
+        },
+        {
+          surname: { $regex: search || "", $options: "i" },
+        },
+        {
+          email: { $regex: search || "", $options: "i" },
+        },
+      ];
     }
 
-    const allRoles = await staffModel.find({ ...queryObj });
+    const staffList = await staffModel.find({ ...queryObj }).populate("country city role");
     const staffCount = await staffModel.countDocuments({ ...queryObj });
 
     const response = {
-      items: allRoles,
+      items: staffList,
       totalCount: staffCount,
     };
 
@@ -48,19 +92,68 @@ module.exports.getStaffList = async (req, res) => {
   }
 };
 
+module.exports.getStaffDetails = async (req, res) => {
+  try {
+    const { staffId } = req.body;
+
+    if (!staffId) return ResponseService.failed(res, "staffId is required", StatusCode.badRequest);
+
+    const staffDetails = await staffModel
+      .findOne({ _id: staffId })
+      .populate("country city role emergencyCountry emergencyCity")
+      .lean();
+    if (!staffDetails) return ResponseService.failed(res, "staff not found", StatusCode.notFound);
+
+    return ResponseService.success(res, `Roles found successfully`, staffDetails);
+  } catch (error) {
+    console.log("api error", error);
+    return ResponseService.serverError(res, server, 400);
+  }
+};
+
 module.exports.updateStaff = async (req, res) => {
   try {
-    const { roleId, name } = req.body;
+    const {
+      _id,
+      emergencyAddress,
+      emergencyEmail,
+      emergencyMobile,
+      emergencyCity,
+      emergencyCountry,
+      firstName,
+      birthDate,
+      address,
+      city,
+      country,
+      email,
+      mobile,
+      role,
+    } = req.body;
 
-    const validationError = checkRequiredFields({ roleId, name });
+    const validationError = checkRequiredFields({
+      _id,
+      emergencyAddress,
+      emergencyEmail,
+      emergencyMobile,
+      emergencyCity,
+      emergencyCountry,
+      firstName,
+      birthDate,
+      address,
+      city,
+      country,
+      email,
+      mobile,
+      role,
+    });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
-    const isRoleExist = await rolesModel.findOne({ _id: roleId });
-    if (!isRoleExist) return ResponseService.failed(res, "Role does not already exist");
+    const isStaffExist = await staffModel.findOne({ _id: _id });
+    if (!isStaffExist) return ResponseService.failed(res, "Staff does not already exist");
 
-    const result = await rolesModel.updateOne({ _id: roleId }, { name: name });
+    const result = await staffModel.updateOne({ _id: _id }, { ...req.body });
 
-    return ResponseService.success(res, `Role updated successfully`, result);
+    return ResponseService.success(res, `Staff updated successfully`, result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, error, 400);
@@ -69,17 +162,17 @@ module.exports.updateStaff = async (req, res) => {
 
 module.exports.deleteStaff = async (req, res) => {
   try {
-    const { roleId, name } = req.body;
+    const { staffId } = req.body;
 
-    const validationError = checkRequiredFields({ roleId, name });
+    const validationError = checkRequiredFields({ staffId });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
-    const isRoleExist = await rolesModel.findOne({ _id: roleId });
-    if (!isRoleExist) return ResponseService.failed(res, "Role does not already exist");
+    const isStaffExist = await staffModel.findOne({ _id: staffId });
+    if (!isStaffExist) return ResponseService.failed(res, "Staff does not already exist");
 
-    const result = await rolesModel.deleteOne({ _id: roleId });
+    const result = await staffModel.updateOne({ _id: staffId }, { status: "deleted" });
 
-    return ResponseService.success(res, `Role deleted successfully`, result);
+    return ResponseService.success(res, `Staff deleted successfully`, result);
   } catch (error) {
     console.log("api error", error);
     return ResponseService.failed(res, error, 400);

@@ -126,6 +126,7 @@ const {
   updateStaff,
   deleteStaff,
   getStaffList,
+  getStaffDetails,
 } = require("../admin/controllers/staffController");
 
 router.route("/uploadMake").get(uploadMake);
@@ -254,6 +255,7 @@ router.route("/getStaffList").post(getStaffList);
 router.route("/addStaff").post(addStaff);
 router.route("/updateStaff").post(updateStaff);
 router.route("/deleteStaff").post(deleteStaff);
+router.route("/getStaffDetails").post(getStaffDetails);
 
 //common
 router.route("/uploadFiles").post(upload.array("images"), uploadFiles);
