@@ -4,12 +4,16 @@ const { StatusCode } = require("../../common/Constants");
 const UserModel = require("../../Models/UserModel");
 const vehiclesModel = require("../../Models/vehiclesModel");
 const { getMonth } = require("../../contants");
+const { Types } = require("mongoose");
 
 module.exports.getUserAnalytics = async (req, res) => {
   try {
-    const { filterType } = req.params;
-    // data: [44, 55, 41, 67, 22, 43, 54, 32, 44, 55, 41, 67],
-    const totalUser = await UserModel.countDocuments();
+    const { country } = req.body;
+
+    const queryObj = {};
+    if (country) {
+      queryObj.country = Types.ObjectId(country);
+    }
 
     const usersCount = await UserModel.aggregate([
       {
@@ -17,6 +21,7 @@ module.exports.getUserAnalytics = async (req, res) => {
           createdAt: {
             $gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)), // Filter documents created in the last 12 months
           },
+          ...queryObj,
         },
       },
       {
@@ -38,6 +43,7 @@ module.exports.getUserAnalytics = async (req, res) => {
       data[getMonth[item._id?.month]] = item.count;
     }
 
+    const totalUser = await UserModel.countDocuments(queryObj);
     const response = {
       records: data,
       totalCount: totalUser,
@@ -52,8 +58,12 @@ module.exports.getUserAnalytics = async (req, res) => {
 
 module.exports.getVehicleAnalytics = async (req, res) => {
   try {
-    const { filterType } = req.params;
-    const totalVehicles = await vehiclesModel.countDocuments({ status: { $ne: "draft" } });
+    const { country } = req.body;
+
+    const queryObj = {};
+    if (country) {
+      queryObj.country = Types.ObjectId(country);
+    }
 
     const vehiclesCount = await vehiclesModel.aggregate([
       {
@@ -62,6 +72,7 @@ module.exports.getVehicleAnalytics = async (req, res) => {
             $gte: new Date(new Date().setFullYear(new Date().getFullYear() - 1)), // Filter documents created in the last 12 months
           },
           status: { $ne: "draft" },
+          ...queryObj,
         },
       },
       {
@@ -82,6 +93,11 @@ module.exports.getVehicleAnalytics = async (req, res) => {
     for await (let item of vehiclesCount) {
       data[getMonth[item._id?.month]] = item.count;
     }
+
+    const totalVehicles = await vehiclesModel.countDocuments({
+      status: { $ne: "draft" },
+      ...queryObj,
+    });
 
     const response = {
       records: data,

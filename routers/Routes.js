@@ -120,6 +120,7 @@ const {
   getRolesList,
   updateRole,
   deleteRole,
+  getRoleDetails,
 } = require("../admin/controllers/rolesController");
 const {
   addStaff,
@@ -128,6 +129,13 @@ const {
   getStaffList,
   getStaffDetails,
 } = require("../admin/controllers/staffController");
+const {
+  staffLogin,
+  setPassword,
+  resetStaffPassword,
+  getStaffProfile,
+  changeStaffPassword,
+} = require("../auth/staffAuth");
 
 router.route("/uploadMake").get(uploadMake);
 router.route("/uploadModel").get(uploadModel);
@@ -145,6 +153,12 @@ router.route("/getUserProfile").get(getUserProfile);
 router.route("/updateUserProfile").post(updateUserProfile);
 router.route("/changePassword").post(changePassword);
 router.route("/sendOtp").post(sendOtp);
+//staff auth
+router.route("/staffLogin").post(staffLogin);
+router.route("/setPassword").post(setPassword);
+router.route("/resetStaffPassword").post(resetStaffPassword);
+router.route("/getStaffProfile").post(getStaffProfile);
+router.route("/changeStaffPassword").post(changeStaffPassword);
 
 //user
 //filters
@@ -224,8 +238,8 @@ router.route("/allUsers").post(allUsers);
 router.route("/userStatus").post(blockUser);
 
 //analytics
-router.route("/getUserAnalytics/:filterType").get(getUserAnalytics);
-router.route("/getVehicleAnalytics/:filterType").get(getVehicleAnalytics);
+router.route("/getUserAnalytics").post(getUserAnalytics);
+router.route("/getVehicleAnalytics").post(getVehicleAnalytics);
 
 //content-page
 router.route("/updateContentPage").post(updateContentPage);
@@ -246,6 +260,7 @@ router.route("/getBanner").post(getBanner);
 
 //roles and permission
 router.route("/getRolesList").post(getRolesList);
+router.route("/getRoleDetails").post(getRoleDetails);
 router.route("/addRole").post(addRole);
 router.route("/updateRole").post(updateRole);
 router.route("/deleteRole").post(deleteRole);

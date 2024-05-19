@@ -10,6 +10,9 @@ const staffSchema = Schema(
     surname: {
       type: String,
     },
+    password: {
+      type: String,
+    },
     birthDate: {
       type: String,
       required: true,
@@ -89,8 +92,8 @@ const staffSchema = Schema(
     status: {
       type: String,
       required: true,
-      enum: ["active", "deleted"],
-      default: "active",
+      enum: ["active", "deleted", "inactive"],
+      default: "inactive",
     },
   },
   { timestamps: true, versionKey: false }

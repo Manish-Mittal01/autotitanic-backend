@@ -6,6 +6,10 @@ const roleSchema = Schema(
       type: String,
       required: true,
     },
+    permissions: {
+      type: Object,
+      default: {},
+    },
   },
   { timestamps: true, versionKey: false }
 );

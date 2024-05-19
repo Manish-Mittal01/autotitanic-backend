@@ -67,7 +67,7 @@ module.exports.register = async (req, res) => {
       subject: "Verify email",
       html: `<p style="font-size: 16px;">
       Click on the link below  to verify your account on autotitanic.com<br/>
-        <a href="${process.env.EMAIL_VERIFICATION_LINK}verify/email?token=${emailToken}&email=${email}">
+        <a href="${process.env.WEBSITE_DOMAIN}verify/email?token=${emailToken}&email=${email}">
         Click here to Verify your email
         <a/>
       </p>
@@ -305,6 +305,9 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
 module.exports.resetPassword = async (req, res) => {
   try {
     const { email, otp, password } = req.body;
+
+    const validationError = checkRequiredFields({ email, otp, password });
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
     const otpHolder = await otpModel.find({ email }).lean();
     if (otpHolder.length === 0)
