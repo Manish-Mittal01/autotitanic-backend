@@ -1,6 +1,5 @@
 const UserModel = require("../Models/UserModel");
 const jwt = require("jsonwebtoken");
-const { ResponseService } = require("../common/responseService");
 
 class UserServices {
   static async checkUserActive(userId) {

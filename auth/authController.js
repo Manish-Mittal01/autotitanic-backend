@@ -11,6 +11,7 @@ const { UserServices } = require("../services/userServices");
 const cors = require("cors")({ origin: true });
 const compareModel = require("../Models/compareModel");
 const { transporter } = require("../firebaseConfig");
+const { Types } = require("mongoose");
 
 module.exports.register = async (req, res) => {
   try {
@@ -29,7 +30,11 @@ module.exports.register = async (req, res) => {
     const emailRegex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/g;
     let isValidEmail = emailRegex.test(email);
     if (!email || !isValidEmail)
-      return ResponseService.failed(res, "Invalid email", StatusCode.forbidden);
+      return ResponseService.failed(res, "Invalid email", StatusCode.badRequest);
+    if (!["private", "dealer"].includes(userType))
+      return ResponseService.failed(res, "Invalid user type", StatusCode.badRequest);
+    if (!Types.ObjectId.isValid(country))
+      return ResponseService.failed(res, "Invalid country", StatusCode.badRequest);
 
     const userExist = await UserModel.findOne({ email });
     if (userExist && userExist.status === "active")
@@ -105,7 +110,7 @@ module.exports.register = async (req, res) => {
     });
   } catch (error) {
     console.log("error", error?.message);
-    return ResponseService.failed(res, error.message || error);
+    return ResponseService.serverError(res, error);
   }
 };
 
