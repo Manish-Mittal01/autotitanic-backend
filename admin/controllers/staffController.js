@@ -44,7 +44,6 @@ module.exports.addStaff = async (req, res) => {
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
     const isStaffExist = await staffModel.findOne({ email }).lean();
-    console.log("isStaffExist", isStaffExist);
     if (isStaffExist && isStaffExist.status !== "deleted")
       return ResponseService.failed(res, "Staff already exist with this email");
 
@@ -92,6 +91,7 @@ module.exports.getStaffList = async (req, res) => {
     }
 
     const staffList = await staffModel.find({ ...queryObj }).populate("country city role");
+
     const staffCount = await staffModel.countDocuments({ ...queryObj });
 
     const response = {
@@ -108,12 +108,12 @@ module.exports.getStaffList = async (req, res) => {
 
 module.exports.getStaffDetails = async (req, res) => {
   try {
-    const { staffId } = req.body;
+    const { id } = req.body;
 
-    if (!staffId) return ResponseService.failed(res, "staffId is required", StatusCode.badRequest);
+    if (!id) return ResponseService.failed(res, "id is required", StatusCode.badRequest);
 
     const staffDetails = await staffModel
-      .findOne({ _id: staffId })
+      .findOne({ _id: id })
       .populate("country city role emergencyCountry emergencyCity")
       .lean();
     if (!staffDetails) return ResponseService.failed(res, "staff not found", StatusCode.notFound);
@@ -176,15 +176,15 @@ module.exports.updateStaff = async (req, res) => {
 
 module.exports.deleteStaff = async (req, res) => {
   try {
-    const { staffId } = req.body;
+    const { id } = req.body;
 
-    const validationError = checkRequiredFields({ staffId });
+    const validationError = checkRequiredFields({ id });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
-    const isStaffExist = await staffModel.findOne({ _id: staffId });
+    const isStaffExist = await staffModel.findOne({ _id: id });
     if (!isStaffExist) return ResponseService.failed(res, "Staff does not already exist");
 
-    const result = await staffModel.updateOne({ _id: staffId }, { status: "deleted" });
+    const result = await staffModel.updateOne({ _id: id }, { status: "deleted" });
 
     return ResponseService.success(res, `Staff deleted successfully`, result);
   } catch (error) {
@@ -234,7 +234,6 @@ const sendMail = async (email) => {
       if (erro) {
         return erro;
       }
-
       return null;
     });
   } catch (error) {

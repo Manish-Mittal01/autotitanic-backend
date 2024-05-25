@@ -1,6 +1,5 @@
 const UserModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const functions = require("firebase-functions");
 const { StatusCode } = require("../common/Constants");
@@ -9,7 +8,6 @@ const { checkRequiredFields } = require("../common/utility");
 const otpModel = require("../Models/otpModel");
 const { UserServices } = require("../services/userServices");
 const cors = require("cors")({ origin: true });
-const compareModel = require("../Models/compareModel");
 const { transporter } = require("../firebaseConfig");
 const staffModel = require("../Models/staffModel");
 
@@ -26,8 +24,6 @@ module.exports.setPassword = async (req, res) => {
     if (isTokenValid?.tokenExpired || !isTokenValid.email)
       return ResponseService.failed(res, "Link expired or invalid link", StatusCode.unauthorized);
 
-    let allOtp = await otpModel.find({}).lean();
-    console.log("allOtp", allOtp);
     let otpHolder = await otpModel.find({ email: isTokenValid.email }).lean();
     console.log("otpHolder", otpHolder);
     console.log("isTokenValid", isTokenValid);
@@ -47,6 +43,7 @@ module.exports.setPassword = async (req, res) => {
     const otpDelete = await otpModel.deleteMany({
       email: otpHolder.email,
     });
+    console.log("otpDelete", otpDelete);
 
     return ResponseService.success(res, "Password set successfully!");
   } catch (error) {
@@ -63,12 +60,13 @@ module.exports.staffLogin = async (req, res) => {
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     const staff = await staffModel.findOne({ email }).populate("role");
+
     if (!staff || staff.status === "deleted")
       return ResponseService.failed(res, "User not Found", StatusCode.notFound);
     if (staff.status === "inactive")
       return ResponseService.failed(
         res,
-        "Set password before login from link in email",
+        "Set password before login from link sent to email",
         StatusCode.forbidden
       );
 

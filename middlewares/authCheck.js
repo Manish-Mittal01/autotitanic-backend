@@ -12,10 +12,8 @@ module.exports.validateStaffToken = async (req, res, next) => {
     if (isTokenValid?.tokenExpired || !isTokenValid._id)
       return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
-    const request = req;
-    request.body = { ...request.body, staffId: isTokenValid._id };
+    req.body.staffId = isTokenValid._id;
     next();
-    // return request;
   } catch (error) {
     console.log("validateStaffToken error", error);
     ResponseService.serverError(res, error);
