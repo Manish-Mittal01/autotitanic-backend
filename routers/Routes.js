@@ -136,7 +136,9 @@ const {
   getStaffProfile,
   changeStaffPassword,
 } = require("../auth/staffAuth");
+const { validateStaffToken, validateUserToken } = require("../middlewares/authCheck");
 
+//other functions
 router.route("/uploadMake").get(uploadMake);
 router.route("/uploadModel").get(uploadModel);
 router.route("/uploadCountryAndCity").get(uploadCountryAndCity);
@@ -149,16 +151,17 @@ router.route("/verifyEmail").post(verifyEmail);
 router.route("/resendVerificationEmail").post(resendVerificationEmail);
 router.route("/login").post(login);
 router.route("/resetPassword").post(resetPassword);
-router.route("/getUserProfile").get(getUserProfile);
-router.route("/updateUserProfile").post(updateUserProfile);
-router.route("/changePassword").post(changePassword);
+router.route("/getUserProfile").get(validateUserToken, getUserProfile);
+router.route("/updateUserProfile").post(validateUserToken, updateUserProfile);
+router.route("/changePassword").post(validateUserToken, changePassword);
 router.route("/sendOtp").post(sendOtp);
+
 //staff auth
 router.route("/staffLogin").post(staffLogin);
 router.route("/setPassword").post(setPassword);
 router.route("/resetStaffPassword").post(resetStaffPassword);
-router.route("/getStaffProfile").post(getStaffProfile);
-router.route("/changeStaffPassword").post(changeStaffPassword);
+router.route("/getStaffProfile").post(validateStaffToken, getStaffProfile);
+router.route("/changeStaffPassword").post(validateStaffToken, changeStaffPassword);
 
 //user
 //filters
@@ -199,78 +202,78 @@ router.route("/removewishlistItem").post(removewishlistItem);
 
 //admin
 //make
-router.route("/makeList").post(getMakeList);
-router.route("/addMake").post(addMake);
-router.route("/makeDetails/:id").get(getMakeDetails);
-router.route("/updateMake").post(updateMake);
-router.route("/deletemake").post(deleteMake);
+router.route("/makeList").post(validateStaffToken, getMakeList);
+router.route("/addMake").post(validateStaffToken, addMake);
+router.route("/makeDetails/:id").get(validateStaffToken, getMakeDetails);
+router.route("/updateMake").post(validateStaffToken, updateMake);
+router.route("/deletemake").post(validateStaffToken, deleteMake);
 
 //model
-router.route("/modelList").post(getModelList);
-router.route("/addModel").post(addModel);
-router.route("/modelDetails/:id").get(getModelDetails);
-router.route("/updateModel").post(updateModel);
-router.route("/deletemodel").post(deleteModel);
+router.route("/modelList").post(validateStaffToken, getModelList);
+router.route("/addModel").post(validateStaffToken, addModel);
+router.route("/modelDetails/:id").get(validateStaffToken, getModelDetails);
+router.route("/updateModel").post(validateStaffToken, updateModel);
+router.route("/deletemodel").post(validateStaffToken, deleteModel);
 
 //variant
-router.route("/variantList").post(getVariantList);
-router.route("/addVariant").post(addVariant);
-router.route("/VariantDetails/:id").get(getVariantDetails);
-router.route("/updateVariant").post(updateVariant);
-router.route("/deleteVariant").post(deleteVariant);
+router.route("/variantList").post(validateStaffToken, getVariantList);
+router.route("/addVariant").post(validateStaffToken, addVariant);
+router.route("/VariantDetails/:id").get(validateStaffToken, getVariantDetails);
+router.route("/updateVariant").post(validateStaffToken, updateVariant);
+router.route("/deleteVariant").post(validateStaffToken, deleteVariant);
 
 //country
-router.route("/countryList").post(getCountriesList);
-router.route("/addCountry").post(addCountry);
-router.route("/viewCountry/:id").get(getCountryDetails);
-router.route("/updateCountry").post(updateCountry);
-router.route("/deleteCountry/:countryId").delete(deleteCountry);
+router.route("/countryList").post(validateStaffToken, getCountriesList);
+router.route("/addCountry").post(validateStaffToken, addCountry);
+router.route("/viewCountry/:id").get(validateStaffToken, getCountryDetails);
+router.route("/updateCountry").post(validateStaffToken, updateCountry);
+router.route("/deleteCountry/:countryId").delete(validateStaffToken, deleteCountry);
 
 //city
-router.route("/cityList").post(getCitiesList);
-router.route("/addCity").post(addCities);
-router.route("/viewCity/:id").get(getCityDetails);
-router.route("/updateCity").post(updateCity);
-router.route("/deleteCity/:cityId").delete(deleteCity);
+router.route("/cityList").post(validateStaffToken, getCitiesList);
+router.route("/addCity").post(validateStaffToken, addCities);
+router.route("/viewCity/:id").get(validateStaffToken, getCityDetails);
+router.route("/updateCity").post(validateStaffToken, updateCity);
+router.route("/deleteCity/:cityId").delete(validateStaffToken, deleteCity);
 
 // users
-router.route("/allUsers").post(allUsers);
-router.route("/userStatus").post(blockUser);
+router.route("/allUsers").post(validateStaffToken, allUsers);
+router.route("/userStatus").post(validateStaffToken, blockUser);
 
 //analytics
-router.route("/getUserAnalytics").post(getUserAnalytics);
-router.route("/getVehicleAnalytics").post(getVehicleAnalytics);
+router.route("/getUserAnalytics").post(validateStaffToken, getUserAnalytics);
+router.route("/getVehicleAnalytics").post(validateStaffToken, getVehicleAnalytics);
 
 //content-page
-router.route("/updateContentPage").post(updateContentPage);
-router.route("/addContentPage").post(addContentPage);
+router.route("/updateContentPage").post(validateStaffToken, updateContentPage);
+router.route("/addContentPage").post(validateStaffToken, addContentPage);
 
 //queries
 router.route("/addQuery").post(addQuery);
-router.route("/allQuery").post(allQuery);
-router.route("/getQueryDetails/:id").get(getQueryDetails);
-router.route("/updateQuery").post(updateQuery);
-router.route("/replyQuery").post(addReplyToQuery);
+router.route("/allQuery").post(validateStaffToken, allQuery);
+router.route("/getQueryDetails/:id").get(validateStaffToken, getQueryDetails);
+router.route("/updateQuery").post(validateStaffToken, updateQuery);
+router.route("/replyQuery").post(validateStaffToken, addReplyToQuery);
 
 //banners
-router.route("/addBanner").post(addBanner);
-router.route("/bannerList").post(bannerList);
-router.route("/updateBanner").post(updateBanner);
+router.route("/addBanner").post(validateStaffToken, addBanner);
+router.route("/bannerList").post(validateStaffToken, bannerList);
+router.route("/updateBanner").post(validateStaffToken, updateBanner);
 router.route("/getBanner").post(getBanner);
 
 //roles and permission
-router.route("/getRolesList").post(getRolesList);
-router.route("/getRoleDetails").post(getRoleDetails);
-router.route("/addRole").post(addRole);
-router.route("/updateRole").post(updateRole);
-router.route("/deleteRole").post(deleteRole);
+router.route("/getRolesList").post(validateStaffToken, getRolesList);
+router.route("/getRoleDetails").post(validateStaffToken, getRoleDetails);
+router.route("/addRole").post(validateStaffToken, addRole);
+router.route("/updateRole").post(validateStaffToken, updateRole);
+router.route("/deleteRole").post(validateStaffToken, deleteRole);
 
 //staff
-router.route("/getStaffList").post(getStaffList);
-router.route("/addStaff").post(addStaff);
-router.route("/updateStaff").post(updateStaff);
-router.route("/deleteStaff").post(deleteStaff);
-router.route("/getStaffDetails").post(getStaffDetails);
+router.route("/getStaffList").post(validateStaffToken, getStaffList);
+router.route("/addStaff").post(validateStaffToken, addStaff);
+router.route("/updateStaff").post(validateStaffToken, updateStaff);
+router.route("/deleteStaff").post(validateStaffToken, deleteStaff);
+router.route("/getStaffDetails").post(validateStaffToken, getStaffDetails);
 
 //common
 router.route("/uploadFiles").post(upload.array("images"), uploadFiles);

@@ -6,6 +6,7 @@ const { StatusCode } = require("../../common/Constants");
 module.exports.getMakeList = async (req, res) => {
   try {
     const { page = 1, limit = 10, category, search } = req.body;
+    console.log("req.body", req.body);
 
     const queryObj = {};
     if (search) {

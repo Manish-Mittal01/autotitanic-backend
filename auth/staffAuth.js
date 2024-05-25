@@ -66,7 +66,11 @@ module.exports.staffLogin = async (req, res) => {
     if (!staff || staff.status === "deleted")
       return ResponseService.failed(res, "User not Found", StatusCode.notFound);
     if (staff.status === "inactive")
-      return ResponseService.failed(res, "Set password before login", StatusCode.forbidden);
+      return ResponseService.failed(
+        res,
+        "Set password before login from link in email",
+        StatusCode.forbidden
+      );
 
     if (!staff.role?.name)
       return ResponseService.failed(res, "No position assigned to staff", StatusCode.notFound);
@@ -176,17 +180,10 @@ module.exports.resetStaffPassword = async (req, res) => {
 
 module.exports.getStaffProfile = async (req, res) => {
   try {
-    const token = req.headers.token;
-
-    if (!token) return ResponseService.failed(res, "Token is required", StatusCode.badRequest);
-
-    const isTokenValid = await UserServices.validateToken(token);
-  
-    if (isTokenValid?.tokenExpired || !isTokenValid._id)
-      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
+    const { staffId } = req.body;
 
     const user = await staffModel
-      .findOne({ _id: isTokenValid._id })
+      .findOne({ _id: staffId })
       .populate("country city role emergencyCity emergencyCountry")
       .lean();
 
@@ -201,18 +198,12 @@ module.exports.getStaffProfile = async (req, res) => {
 
 module.exports.changeStaffPassword = async (req, res) => {
   try {
-    const { oldPassword, password } = req.body;
+    const { oldPassword, password, staffId } = req.body;
 
-    const validationError = checkRequiredFields({ oldPassword, password });
+    const validationError = checkRequiredFields({ oldPassword, password, staffId });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
-    const token = req.headers?.token;
-    const isTokenValid = await UserServices.validateToken(token);
-    
-    if (isTokenValid?.tokenExpired || !isTokenValid._id)
-      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
-
-    const user = await staffModel.findOne({ _id: isTokenValid._id });
+    const user = await staffModel.findOne({ _id: staffId });
     if (!user) return ResponseService.failed(res, "User not found", StatusCode.badRequest);
 
     const isPasswordCorrect = await bcrypt.compare(oldPassword, user.password);
@@ -221,7 +212,7 @@ module.exports.changeStaffPassword = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     let newPassword = await bcrypt.hash(password, salt);
-    const result = await staffModel.updateOne({ _id: isTokenValid._id }, { password: newPassword });
+    const result = await staffModel.updateOne({ _id: staffId }, { password: newPassword });
 
     ResponseService.success(res, "Password updated!!", result);
   } catch (error) {

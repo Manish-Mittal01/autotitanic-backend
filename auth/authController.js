@@ -370,15 +370,10 @@ module.exports.changePassword = async (req, res) => {
 
 module.exports.getUserProfile = async (req, res) => {
   try {
-    const token = req.headers["x-access-token"];
+    const { userId } = req.body;
 
-    const isTokenValid = await UserServices.validateToken(token);
-    // console.log("isTokenValid", isTokenValid);
-    if (isTokenValid?.tokenExpired || !isTokenValid._id)
-      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
-
-    const user = await UserModel.findOne({ _id: isTokenValid._id }).populate("country").lean();
-    const compareCount = await compareModel.countDocuments({ user: isTokenValid._id });
+    const user = await UserModel.findOne({ _id: userId }).populate("country").lean();
+    const compareCount = await compareModel.countDocuments({ user: userId });
 
     if (!user) return ResponseService.failed(res, "User not found", StatusCode.notFound);
 

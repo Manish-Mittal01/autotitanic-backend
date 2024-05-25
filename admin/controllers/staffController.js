@@ -43,12 +43,13 @@ module.exports.addStaff = async (req, res) => {
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
-    const isStaffExist = await staffModel.findOne({ email });
+    const isStaffExist = await staffModel.findOne({ email }).lean();
+    console.log("isStaffExist", isStaffExist);
     if (isStaffExist && isStaffExist.status !== "deleted")
       return ResponseService.failed(res, "Staff already exist with this email");
 
     let result = {};
-    if (isStaffExist.status === "deleted") {
+    if (isStaffExist && isStaffExist.status === "deleted") {
       result = await staffModel.updateOne({ email }, { status: "inactive" });
     } else {
       const newStaff = new staffModel({ ...req.body });
@@ -60,7 +61,7 @@ module.exports.addStaff = async (req, res) => {
     return ResponseService.success(res, `Staff registered successfully`, result);
   } catch (error) {
     console.log("api error", error);
-    return ResponseService.failed(res, error, 400);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -101,7 +102,7 @@ module.exports.getStaffList = async (req, res) => {
     return ResponseService.success(res, `Roles found successfully`, response);
   } catch (error) {
     console.log("api error", error);
-    return ResponseService.failed(res, error, 400);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -169,7 +170,7 @@ module.exports.updateStaff = async (req, res) => {
     return ResponseService.success(res, `Staff updated successfully`, result);
   } catch (error) {
     console.log("api error", error);
-    return ResponseService.failed(res, error, 400);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -188,7 +189,7 @@ module.exports.deleteStaff = async (req, res) => {
     return ResponseService.success(res, `Staff deleted successfully`, result);
   } catch (error) {
     console.log("api error", error);
-    return ResponseService.failed(res, error, 400);
+    return ResponseService.serverError(res, error);
   }
 };
 
