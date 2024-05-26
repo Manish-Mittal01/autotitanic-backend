@@ -49,7 +49,7 @@ module.exports.addStaff = async (req, res) => {
 
     let result = {};
     if (isStaffExist && isStaffExist.status === "deleted") {
-      result = await staffModel.updateOne({ email }, { status: "inactive" });
+      result = await staffModel.updateOne({ email }, { ...req.body, status: "inactive" });
     } else {
       const newStaff = new staffModel({ ...req.body });
       result = await newStaff.save();
