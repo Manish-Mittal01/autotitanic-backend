@@ -12,6 +12,7 @@ const cors = require("cors")({ origin: true });
 const compareModel = require("../Models/compareModel");
 const { transporter } = require("../firebaseConfig");
 const { Types } = require("mongoose");
+const staffModel = require("../Models/staffModel");
 
 module.exports.register = async (req, res) => {
   try {
@@ -259,9 +260,12 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
         return ResponseService.failed(res, "Invalid email", StatusCode.forbidden);
 
       const isUserExist = await UserModel.findOne({ email }).lean();
-      if (!isUserExist)
-        return ResponseService.failed(res, "user does not exit", StatusCode.notFound);
-
+      let isStaffExist = "";
+      if (!isUserExist) {
+        isStaffExist = await staffModel.findOne({ email }).lean();
+        if (!isStaffExist)
+          return ResponseService.failed(res, "user does not exit", StatusCode.notFound);
+      }
       const OTP = otpGenerator.generate(6, {
         digits: true,
         lowerCaseAlphabets: false,
