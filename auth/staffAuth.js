@@ -35,15 +35,17 @@ module.exports.setPassword = async (req, res) => {
     if (isTokenValid.otp !== otpHolder.otp)
       return ResponseService.failed(res, "Invalid link", StatusCode.badRequest);
 
+    const salt = await bcrypt.genSalt(10);
+    let newPassword = await bcrypt.hash(password, salt);
+
     const result = await staffModel.updateOne(
       { email: isTokenValid.email },
-      { status: "active", password: password }
+      { status: "active", password: newPassword }
     );
 
     const otpDelete = await otpModel.deleteMany({
       email: otpHolder.email,
     });
-    console.log("otpDelete", otpDelete);
 
     return ResponseService.success(res, "Password set successfully!");
   } catch (error) {
