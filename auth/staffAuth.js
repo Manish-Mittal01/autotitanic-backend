@@ -18,15 +18,15 @@ module.exports.setPassword = async (req, res) => {
     const validationError = checkRequiredFields({ token, password });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
 
-    if (!token) return ResponseService.failed(res, "token is required", StatusCode.badRequest);
+    if (!token) return ResponseService.failed(res, "token not found", StatusCode.badRequest);
 
     const isTokenValid = await UserServices.validateToken(token);
+    // console.log("isTokenValid", isTokenValid);
     if (isTokenValid?.tokenExpired || !isTokenValid.email)
       return ResponseService.failed(res, "Link expired or invalid link", StatusCode.unauthorized);
 
     let otpHolder = await otpModel.find({ email: isTokenValid.email }).lean();
-    console.log("otpHolder", otpHolder);
-    console.log("isTokenValid", isTokenValid);
+    // console.log("otpHolder", otpHolder);
     if (otpHolder.length === 0)
       return ResponseService.failed(res, "Invalid link", StatusCode.badRequest);
 

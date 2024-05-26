@@ -220,3 +220,44 @@ module.exports.updateData = async (req, res) => {
     return ResponseService.failed(res, error.message, StatusCode.srevrError);
   }
 };
+
+// module.exports.uploadAllMake = async (req, res) => {
+//   try {
+//     const dir = path.join(__dirname, "..", "..", "images", "make logos");
+//     const fileList = fs.readdirSync(dir);
+
+//     const downloadUrls = [];
+
+//     for (let file of fileList) {
+//       const split = file.split(".");
+//       const imageType = split.pop();
+//       const label = split.join();
+
+//       console.log("imageType", imageType);
+
+//       const filename = dir + "/" + file;
+//       const fileBuffer = fs.readFileSync(filename);
+
+//       const storageRef = ref(storage, `autotitanic/${file}/${Date.now()}`);
+//       const metatype = {
+//         contentType: `image/${imageType}`,
+//       };
+
+//       const uploadTask = await uploadBytesResumable(storageRef, fileBuffer, metatype);
+
+//       const downloadUrl = await getDownloadURL(uploadTask.ref);
+//       downloadUrls.push(downloadUrl);
+//       const newMake = { label, type: ["cars"], logo: downloadUrl };
+//       const make = new makeModel(newMake);
+//       const result = await make.save();
+//     }
+
+//     return res.send({
+//       status: 200,
+//       data: downloadUrls,
+//     });
+//   } catch (error) {
+//     console.log("file upload error", error);
+//     return ResponseService.failed(res, `Error in uploading the files ${error}`);
+//   }
+// };
