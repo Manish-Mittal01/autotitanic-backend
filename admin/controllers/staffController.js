@@ -108,12 +108,12 @@ module.exports.getStaffList = async (req, res) => {
 
 module.exports.getStaffDetails = async (req, res) => {
   try {
-    const { id } = req.body;
+    const { staffId } = req.body;
 
-    if (!id) return ResponseService.failed(res, "id is required", StatusCode.badRequest);
+    if (!staffId) return ResponseService.failed(res, "staffId is required", StatusCode.badRequest);
 
     const staffDetails = await staffModel
-      .findOne({ _id: id })
+      .findOne({ _id: staffId })
       .populate("country city role emergencyCountry emergencyCity")
       .lean();
     if (!staffDetails) return ResponseService.failed(res, "staff not found", StatusCode.notFound);

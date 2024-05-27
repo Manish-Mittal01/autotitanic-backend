@@ -29,13 +29,11 @@ const staffSchema = Schema(
       required: true,
     },
     city: {
-      type: Schema.Types.ObjectId,
-      ref: "cities",
+      type: String,
       required: true,
     },
     country: {
-      type: Schema.Types.ObjectId,
-      ref: "countries",
+      type: String,
       required: true,
     },
     email: {
@@ -77,12 +75,10 @@ const staffSchema = Schema(
     },
     emergencyCity: {
       type: String,
-      ref: "cities",
       required: true,
     },
     emergencyCountry: {
       type: String,
-      ref: "countries",
       required: true,
     },
     emergencyAddress: {
