@@ -217,7 +217,7 @@ const sendMail = async (email) => {
     );
 
     const mailOptions = {
-      from: "Manish Mittal <no-reply@manishmittal.tech>",
+      from: "Autotitanic <autotitanic.com>",
       to: email,
       subject: "Set Password",
       html: `<p style="font-size: 16px;">

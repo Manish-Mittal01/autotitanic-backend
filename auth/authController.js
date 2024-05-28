@@ -68,7 +68,7 @@ module.exports.register = async (req, res) => {
     );
 
     const mailOptions = {
-      from: "Manish Mittal <no-reply@manishmittal.tech>",
+      from: "Autotitanic <autotitanic.com>",
       to: email,
       subject: "Verify email",
       html: `<p style="font-size: 16px;">
@@ -160,7 +160,7 @@ module.exports.resendVerificationEmail = async (req, res) => {
     );
 
     const mailOptions = {
-      from: "Manish Mittal <no-reply@manishmittal.tech>",
+      from: "Autotitanic <autotitanic.com>",
       to: email,
       subject: "Verify email",
       html: `<p style="font-size: 16px;">
@@ -279,7 +279,7 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
       const result = await otp.save();
 
       const mailOptions = {
-        from: "Manish Mittal <no-reply@manishmittal.tech>", // Something like: Jane Doe <janedoe@gmail.com>
+        from: "Autotitanic <autotitanic.com>", // Something like: Jane Doe <janedoe@gmail.com>
         to: email,
         // to: "devmanishmittal@gmail.com",
         subject: "Reset Password", // email subject

@@ -38,7 +38,7 @@ module.exports.addReview = async (req, res) => {
     const result = await validReview.save();
 
     const mailOptions = {
-      from: "Manish Mittal <no-reply@manishmittal.tech>",
+      from: "Autotitanic <autotitanic.com>",
       to: isSellerExist.email,
       subject: "New Review",
       html: `<p style="font-size: 16px;">

@@ -25,7 +25,7 @@ module.exports.sendMail = functions.https.onRequest((req, res) => {
     const dest = req.query.dest;
 
     const mailOptions = {
-      from: "Manish Mittal <no-reply@manishmittal.tech>", // Something like: Jane Doe <janedoe@gmail.com>
+      from: "Autotitanic <autotitanic.com>", // Something like: Jane Doe <janedoe@gmail.com>
       to: "mittalmanish938@gmail.com",
       subject: "test", // email subject
       html: `<p style="font-size: 16px;">test it!!</p>
