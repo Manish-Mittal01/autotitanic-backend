@@ -161,7 +161,7 @@ module.exports.resendVerificationEmail = async (req, res) => {
       subject: "Verify email",
       html: `<p style="font-size: 16px;">
       Click on the link below  to verify your account on autotitanic.com<br/>
-        <a href="http://localhost:3000/verify/email?token=${emailToken}&email=${email}">
+        <a href="${process.env.WEBSITE_DOMAIN}verify/email?token=${emailToken}&email=${email}">
         Click here to Verify your email
         <a/>
       </p>
