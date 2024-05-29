@@ -4,16 +4,7 @@ const User = require("../../Models/UserModel");
 const { ResponseService } = require("../../common/responseService");
 const { StatusCode } = require("../../common/Constants");
 const { checkRequiredFields } = require("../../common/utility");
-
-let transporter = nodemailer.createTransport({
-  host: "smtp.hostinger.com",
-  port: 465,
-  secure: true, // true for 465, false for other ports
-  auth: {
-    user: "no-reply@manishmittal.tech",
-    pass: "Mittal@938",
-  },
-});
+const { transporter } = require("../../firebaseConfig");
 
 module.exports.allUsers = async (req, res) => {
   const { page = 1, limit = 10, status, search, country } = req.body;
@@ -93,8 +84,7 @@ module.exports.sendEmailToUsers = async (req, res) => {
     users = users.slice(0, 100); // limit to max 100 emails at a time
 
     var mailOptions = {
-      from: "no-reply@manishmittal.tech",
-      // to: "mittalmanish2000@gmail.com",
+      from: "Autotitanic <info.autotitanic@gmail.com",
       bcc: users,
       subject: title,
       text: message,

@@ -118,7 +118,6 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
       const mailOptions = {
         from: "Autotitanic <autotitanic.com>", // Something like: Jane Doe <janedoe@gmail.com>
         to: email,
-        // to: "devmanishmittal@gmail.com",
         subject: "Reset Password", // email subject
         html: `<div  style="font-size: 16px;">
                 <p>Dear ${isUserExist?.name?.split(" ")?.[0] || "User"}</p>

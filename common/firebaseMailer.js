@@ -4,21 +4,6 @@ const nodemailer = require("nodemailer");
 const { transporter } = require("../firebaseConfig");
 const cors = require("cors")({ origin: true });
 
-/**
- * Here we're using Gmail to send
- */
-// let transporter = nodemailer.createTransport({
-//   service: "gmail",
-//   host: "smtp.gmail.com",
-//   port: 465,
-//   secure: true,
-//   auth: {
-//     user: "devmanishmittal@gmail.com",
-//     pass: "kzqz wwku cyzp zjjq",
-//     // pass: "kzqz wwku cyzp zjjq",
-//   },
-// });
-
 module.exports.sendMail = functions.https.onRequest((req, res) => {
   cors(req, res, () => {
     // getting dest email by query string

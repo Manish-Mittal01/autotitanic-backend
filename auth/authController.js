@@ -56,8 +56,6 @@ module.exports.register = async (req, res) => {
     otp.otp = await bcrypt.hash(otp.otp, otpSalt);
     const otpResult = await otp.save();
 
-    // <a href="manishmittal.tech/verify/email?OTP=${otpResult.otp}">
-
     const emailToken = jwt.sign(
       {
         email: email,
@@ -147,8 +145,6 @@ module.exports.resendVerificationEmail = async (req, res) => {
     const otpSalt = await bcrypt.genSalt(10);
     otp.otp = await bcrypt.hash(otp.otp, otpSalt);
     const otpResult = await otp.save();
-
-    // <a href="manishmittal.tech/verify/email?OTP=${otpResult.otp}">
 
     const emailToken = jwt.sign(
       {
@@ -281,7 +277,6 @@ module.exports.sendOtp = functions.https.onRequest((req, res) => {
       const mailOptions = {
         from: "Autotitanic <autotitanic.com>", // Something like: Jane Doe <janedoe@gmail.com>
         to: email,
-        // to: "devmanishmittal@gmail.com",
         subject: "Reset Password", // email subject
         html: `<div  style="font-size: 16px;">
                 <p>Dear ${isUserExist?.name?.split(" ")?.[0] || "User"}</p>

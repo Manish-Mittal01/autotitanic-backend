@@ -575,7 +575,7 @@ module.exports.updateVehicle = async (req, res) => {
 
     const message = `Your post has been ${status} on autotitanic`;
     var mailOptions = {
-      from: "no-reply@manishmittal.tech",
+      from: "Autotitanic <info.autotitanic@gmail.com>",
       to: details.user.email,
       subject: "Autotitanic post",
       text: message,
