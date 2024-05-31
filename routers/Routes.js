@@ -1,5 +1,4 @@
 const router = require("express").Router();
-const { upload, uploadFiles } = require("../common/file-upload-controller");
 const {
   login,
   register,
@@ -137,6 +136,8 @@ const {
   changeStaffPassword,
 } = require("../auth/staffAuth");
 const { validateStaffToken, validateUserToken } = require("../middlewares/authCheck");
+const { upload } = require("../utils/multer");
+const { uploadFiles } = require("../common/file-upload-controller");
 
 //other functions
 router.route("/uploadMake").get(uploadMake);

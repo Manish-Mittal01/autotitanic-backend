@@ -1,4 +1,7 @@
 const { Schema, model } = require("mongoose");
+const fs = require("fs");
+const cron = require("node-cron");
+const path = require("path");
 
 const vehicleSchema = Schema(
   {
@@ -105,7 +108,7 @@ const vehicleSchema = Schema(
       ref: "makes",
     },
     media: {
-      type: [{ url: String, type: { type: String } }],
+      type: [{ url: String, type: { type: String }, filename: String }],
       required: true,
       default: [],
     },
@@ -173,4 +176,46 @@ const vehicleSchema = Schema(
   { versionKey: false, timestamps: true }
 );
 
-module.exports = model("vehicles", vehicleSchema);
+const vehicleModel = model("vehicles", vehicleSchema);
+
+let cleanupTaskRunning = false;
+
+async function cleanupExpiredDocuments() {
+  if (cleanupTaskRunning) {
+    console.log("Cleanup task is already running. Skipping this execution.");
+    return;
+  }
+  cleanupTaskRunning = true;
+  const sixMonth = 6 * 30 * 24 * 60 * 60;
+
+  try {
+    const expiredDocs = await vehicleModel.find({
+      createdAt: { $lt: new Date(Date.now() - sixMonth) }, // Find documents older than 1 minute
+    });
+
+    for (const doc of expiredDocs) {
+      for (const image of doc.images) {
+        try {
+          const delFiles = await fs.promises.unlink(
+            path.join(__dirname, "..", "public", "assets", image.filename)
+          );
+          const deletedDoc = await vehicleModel.deleteOne({
+            _id: doc._id,
+          });
+        } catch (err) {
+          console.log("err deleting file", err);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error cleaning up expired documents:", error);
+    cleanupTaskRunning = false;
+  } finally {
+    cleanupTaskRunning = false;
+  }
+}
+
+// Schedule the cleanup job to run every minute
+cron.schedule("0 0 * * *", cleanupExpiredDocuments);
+
+module.exports = vehicleModel;

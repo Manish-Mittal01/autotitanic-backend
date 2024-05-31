@@ -1,5 +1,4 @@
 const { initializeApp } = require("firebase/app");
-const SharpMulter = require("sharp-multer");
 const { firebaseConfig } = require("../firebaseConfig");
 const { getStorage, ref, getDownloadURL, uploadBytesResumable } = require("firebase/storage");
 const multer = require("multer");
@@ -17,7 +16,7 @@ const storage = getStorage(firebaseApp);
 //   },
 // });
 
-module.exports.upload = multer({ storage: multer.memoryStorage() });
+// module.exports.upload = multer({ storage: multer.memoryStorage() });
 
 module.exports.uploadFiles = async (req, res) => {
   try {
@@ -29,13 +28,14 @@ module.exports.uploadFiles = async (req, res) => {
     for (let file of files) {
       if (file.mimetype.split("/")[0] !== "image")
         return ResponseService.failed(res, "Only images are allowed", StatusCode.badRequest);
-      const storageRef = ref(storage, `autotitanic/${file.originalname}/${Date.now()}`);
-      const metaData = {
-        contentType: file.mimetype,
-      };
-      const snapShot = await uploadBytesResumable(storageRef, file.buffer, metaData);
-      const downloadURL = await getDownloadURL(snapShot.ref);
-      downloadURLs.push({ url: downloadURL, type: file.mimetype });
+      // const storageRef = ref(storage, `autotitanic/${file.originalname}/${Date.now()}`);
+      // const metaData = {
+      //   contentType: file.mimetype,
+      // };
+      // const snapShot = await uploadBytesResumable(storageRef, file.buffer, metaData);
+      // const downloadURL = await getDownloadURL(snapShot.ref);
+      const downloadURL = `${process.env.HOST}/images/${file.filename}`;
+      downloadURLs.push({ url: downloadURL, type: file.mimetype, filename: file.filename });
     }
 
     const responseData = [...downloadURLs];

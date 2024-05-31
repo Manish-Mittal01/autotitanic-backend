@@ -1,10 +1,8 @@
 const { ResponseService } = require("../../common/responseService");
-const { checkRequiredFields } = require("../../common/utility");
-const { StatusCode } = require("../../common/Constants");
 const UserModel = require("../../Models/UserModel");
 const vehiclesModel = require("../../Models/vehiclesModel");
-const { getMonth } = require("../../contants");
 const { Types } = require("mongoose");
+const { getMonth } = require("../../utils/contants");
 
 module.exports.getUserAnalytics = async (req, res) => {
   try {
