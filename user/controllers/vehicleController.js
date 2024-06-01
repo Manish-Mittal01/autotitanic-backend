@@ -68,13 +68,16 @@ module.exports.addVehicle = async (req, res) => {
 module.exports.getAllvehicles = async (req, res) => {
   try {
     const token = req.headers["x-access-token"];
-    let { filters = {}, paginationDetails, listType } = req.body;
+    let { filters = {}, paginationDetails, listType, extraFilters } = req.body;
     paginationDetails = paginationDetails || { page: 1, limit: 25 };
 
     const isTokenValid = await UserServices.validateToken(token);
     // if (isTokenValid?.tokenExpired || !isTokenValid._id)
 
     const queryObj = myFilter(filters);
+    if (listType === "admin" && extraFilters?.user) {
+      queryObj["user.email"] = extraFilters?.user || "";
+    }
 
     let allVehicles = await vehiclesModel.aggregate([
       {
@@ -218,7 +221,7 @@ module.exports.getAllvehicles = async (req, res) => {
       },
     ]);
 
-    const vehicleCount = await getVehicleCount(filters);
+    const vehicleCount = await getVehicleCount(filters, listType, extraFilters);
 
     const response = {
       items: allVehicles,
@@ -284,11 +287,11 @@ module.exports.getResultCountByFilter = async (req, res) => {
   }
 };
 
-const getVehicleCount = async (filters) => {
+const getVehicleCount = async (filters, listType, extraFilters) => {
   const queryObj = myFilter(filters);
-
-  // console.log("filters", filters);
-  // console.log("queryObj1", queryObj);
+  if (listType === "admin" && extraFilters?.user) {
+    queryObj["user.email"] = extraFilters?.user || "";
+  }
 
   const allVehiclesCount = await vehiclesModel.aggregate([
     {
