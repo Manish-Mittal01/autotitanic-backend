@@ -29,6 +29,7 @@ module.exports.allUsers = async (req, res) => {
 
   let users = await User.find({ ...queryObj })
     .skip((page - 1) * limit)
+    .sort({ createdAt: -1 })
     .limit(limit)
     .populate("country")
     .lean();
