@@ -1,7 +1,9 @@
+const { Types } = require("mongoose");
+const path = require("path");
+const ejs = require("ejs");
 const functions = require("firebase-functions");
 const cors = require("cors")({ origin: true });
 const { transporter } = require("../../firebaseConfig");
-const { Types } = require("mongoose");
 const { ResponseService } = require("../../common/responseService");
 const { checkRequiredFields } = require("../../common/utility");
 const { StatusCode } = require("../../common/Constants");
@@ -563,7 +565,6 @@ module.exports.updateVehicle = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, reason } = req.body; //approved || rejected
-    console.log("req.body", req.body);
 
     if (!id) return ResponseService.failed(res, "id is required", StatusCode.notFound);
     const isValidId = Types.ObjectId.isValid(id);
@@ -580,18 +581,16 @@ module.exports.updateVehicle = async (req, res) => {
     if (status === "approved" || status === "rejected") {
       const message =
         status === "approved"
-          ? `<p>Dear <b>${details.user?.name?.split(" ")[0]}</b>,</p>
-              <p>Great news!</p>
-              <p>We are pleased to inform you that your advert has now gone live. We wish you best of luck with your sale.</p>
-              <span>Thank you,</span>
-              <p>${[process.env.WEB_HOME]}</p>`
+          ? await ejs.renderFile(path.join(__dirname, "..", "..", "templates", "postApprove.ejs"), {
+              name: details.user?.name?.split(" ")[0],
+            })
           : status === "rejected"
-          ? `<p>Dear <b>${details.user?.name?.split(" ")[0]}</b>,</p>
-              <p>We are sorry to inform you that your advert has been rejected because ${reason}</p>
-              <p>Please correct this and resubmit for our review and approval.</p>
-              <span>Thank you,</span>
-              <p>${[process.env.WEB_HOME]}</p>`
+          ? await ejs.renderFile(path.join(__dirname, "..", "..", "templates", "postReject.ejs"), {
+              name: details.user?.name?.split(" ")[0],
+              reason: reason || "",
+            })
           : "";
+
       var mailOptions = {
         from: process.env.MAIL_SENDER,
         to: details.user.email,
@@ -604,7 +603,7 @@ module.exports.updateVehicle = async (req, res) => {
 
     return ResponseService.success(res, "Vehicle updated", result);
   } catch (error) {
-    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+    return ResponseService.serverError(res, error);
   }
 };
 
