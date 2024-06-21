@@ -562,29 +562,45 @@ module.exports.getVehicleDetails = async (req, res) => {
 module.exports.updateVehicle = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body; //approved || rejected
+    const { status, reason } = req.body; //approved || rejected
+    console.log("req.body", req.body);
 
     if (!id) return ResponseService.failed(res, "id is required", StatusCode.notFound);
     const isValidId = Types.ObjectId.isValid(id);
     if (!isValidId) return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
 
     const details = await vehiclesModel.findOne({ _id: id }).populate("user").lean();
-
     if (!details) return ResponseService.failed(res, "Vehicle not found", StatusCode.notFound);
+
     const result = await vehiclesModel.updateOne(
       { _id: id },
       { ...req.body, createdAt: status === "pending" ? new Date() : details.createdAt }
     );
 
-    const message = `Your post has been ${status} on autotitanic`;
-    var mailOptions = {
-      from: "Autotitanic <info.autotitanic@gmail.com>",
-      to: details.user.email,
-      subject: "Autotitanic post",
-      text: message,
-    };
+    if (status === "approved" || status === "rejected") {
+      const message =
+        status === "approved"
+          ? `<p>Dear <b>${details.user?.name?.split(" ")[0]}</b>,</p>
+              <p>Great news!</p>
+              <p>We are pleased to inform you that your advert has now gone live. We wish you best of luck with your sale.</p>
+              <span>Thank you,</span>
+              <p>${[process.env.WEB_HOME]}</p>`
+          : status === "rejected"
+          ? `<p>Dear <b>${details.user?.name?.split(" ")[0]}</b>,</p>
+              <p>We are sorry to inform you that your advert has been rejected because ${reason}</p>
+              <p>Please correct this and resubmit for our review and approval.</p>
+              <span>Thank you,</span>
+              <p>${[process.env.WEB_HOME]}</p>`
+          : "";
+      var mailOptions = {
+        from: process.env.MAIL_SENDER,
+        to: details.user.email,
+        subject: "Autotitanic post",
+        html: message,
+      };
 
-    const info = await transporter.sendMail(mailOptions);
+      const info = await transporter.sendMail(mailOptions);
+    }
 
     return ResponseService.success(res, "Vehicle updated", result);
   } catch (error) {
