@@ -39,7 +39,7 @@ module.exports.getMakeList = async (req, res) => {
 
 module.exports.addMake = async (req, res) => {
   try {
-    const { label, type, logo } = req.body;
+    const { label, type, logo, isPopular, isMainLogo } = req.body;
 
     const validationError = checkRequiredFields({
       label,
@@ -48,7 +48,7 @@ module.exports.addMake = async (req, res) => {
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const newMake = { label, type, logo };
+    const newMake = { label, type, logo, isPopular, isMainLogo };
     const make = new makeModel(newMake);
 
     const isMakeExist = await makeModel.findOne({
@@ -89,7 +89,7 @@ module.exports.getMakeDetails = async (req, res) => {
 
 module.exports.updateMake = async (req, res) => {
   try {
-    const { label, type, logo, makeId } = req.body;
+    const { label, type, logo, makeId, isPopular, isMainLogo } = req.body;
 
     const validationError = checkRequiredFields({
       label,
@@ -113,6 +113,8 @@ module.exports.updateMake = async (req, res) => {
           label: label,
           type: type,
           logo: logo,
+          isPopular,
+          isMainLogo,
         },
       }
     );

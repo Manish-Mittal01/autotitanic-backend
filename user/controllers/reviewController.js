@@ -19,11 +19,12 @@ module.exports.addReview = async (req, res) => {
     const validationError = checkRequiredFields({ seller, rating, review });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
-    const user = await UserModel.findOne({ _id: isTokenValid._id }).lean();
+    if (seller === isTokenValid._id)
+      return ResponseService.failed(res, "Cannot add review for your own", StatusCode.badRequest);
 
     const isSellerExist = await UserModel.findOne({ _id: seller }).lean();
     if (!isSellerExist)
-      return ResponseService.failed(res, "Seller not exist", StatusCode.badRequest);
+      return ResponseService.failed(res, "Seller does not exist", StatusCode.badRequest);
 
     const isReviewExist = await reviewModel.findOne({ user: isTokenValid._id, seller });
     if (isReviewExist)
@@ -36,6 +37,8 @@ module.exports.addReview = async (req, res) => {
     const newReview = { user: isTokenValid._id, seller, rating, review };
     const validReview = new reviewModel(newReview);
     const result = await validReview.save();
+
+    const user = await UserModel.findOne({ _id: isTokenValid._id }).lean();
 
     const mailOptions = {
       from: "Autotitanic <autotitanic.com>",
