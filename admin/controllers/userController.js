@@ -9,7 +9,7 @@ const { transporter } = require("../../firebaseConfig");
 module.exports.allUsers = async (req, res) => {
   const { page = 1, limit = 10, status, search, country } = req.body;
 
-  let queryObj = {};
+  let queryObj = { status: { $ne: "deleted" } };
   if (status) {
     queryObj.status = status;
   }
@@ -39,11 +39,13 @@ module.exports.allUsers = async (req, res) => {
   return ResponseService.success(res, "User list found", { items: users, totalCount: usersCount });
 };
 
-module.exports.blockUser = async (req, res) => {
+module.exports.manageUserStatus = async (req, res) => {
   try {
-    let { userId } = req.body;
+    let { userId, status } = req.body;
 
     if (!userId) return ResponseService.failed(res, "userId is required", StatusCode.notFound);
+    if (!status) return ResponseService.failed(res, "status is required", StatusCode.notFound);
+
     const isValidId = Types.ObjectId.isValid(userId);
     if (!isValidId) return ResponseService.failed(res, "Invalid userId", StatusCode.badRequest);
 
@@ -52,12 +54,7 @@ module.exports.blockUser = async (req, res) => {
     });
 
     if (!user) return ResponseService.failed(res, "User not found", StatusCode.notFound);
-    let result;
-    if (user.status === "blocked") {
-      result = await User.updateOne({ _id: user._id }, { status: "active" });
-    } else {
-      result = await User.updateOne({ _id: user._id }, { status: "blocked" });
-    }
+    const result = await User.updateOne({ _id: user._id }, { status });
 
     return ResponseService.success(res, "user status updated", result);
   } catch (error) {

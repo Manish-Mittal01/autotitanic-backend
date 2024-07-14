@@ -226,7 +226,11 @@ module.exports.login = async (req, res) => {
 
     if (!user) return ResponseService.failed(res, "User not Found", StatusCode.notFound);
     if (user.status === "blocked")
-      return ResponseService.failed(res, "User is blocked", StatusCode.unauthorized);
+      return ResponseService.failed(
+        res,
+        "User is blocked, If it is a mistake contact Us to review your account!!",
+        StatusCode.unauthorized
+      );
 
     const isPasswordCorrect = await bcrypt.compare(password, user.password);
 

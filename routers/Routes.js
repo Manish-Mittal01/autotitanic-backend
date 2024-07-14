@@ -88,7 +88,11 @@ const {
   updateData,
   uploadModel,
 } = require("../common/dataUploadFunctions");
-const { allUsers, blockUser, sendEmailToUsers } = require("../admin/controllers/userController");
+const {
+  allUsers,
+  manageUserStatus,
+  sendEmailToUsers,
+} = require("../admin/controllers/userController");
 const {
   getUserAnalytics,
   getVehicleAnalytics,
@@ -239,7 +243,7 @@ router.route("/deleteCity/:cityId").delete(validateStaffToken, deleteCity);
 
 // users
 router.route("/allUsers").post(validateStaffToken, allUsers);
-router.route("/userStatus").post(validateStaffToken, blockUser);
+router.route("/manageUserStatus").post(validateStaffToken, manageUserStatus);
 
 //analytics
 router.route("/getUserAnalytics").post(validateStaffToken, getUserAnalytics);

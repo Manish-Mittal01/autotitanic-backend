@@ -16,7 +16,7 @@ const userSchema = Schema(
     },
     status: {
       type: String,
-      enum: ["inactive", "active", "blocked"],
+      enum: ["inactive", "active", "blocked", "deleted"],
       default: "inactive",
       required: true,
     },
