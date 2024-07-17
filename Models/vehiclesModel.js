@@ -190,7 +190,7 @@ async function cleanupExpiredDocuments() {
 
   try {
     const expiredDocs = await vehicleModel.find({
-      createdAt: { $lt: new Date(Date.now() - sixMonth) }, // Find documents older than 1 minute
+      createdAt: { $lt: new Date(Date.now() - sixMonth) }, // Find documents older than 6 months
     });
 
     for (const doc of expiredDocs) {
@@ -215,7 +215,7 @@ async function cleanupExpiredDocuments() {
   }
 }
 
-// Schedule the cleanup job to run every minute
+// Schedule the cleanup job to run every day
 cron.schedule("0 0 * * *", cleanupExpiredDocuments);
 
 module.exports = vehicleModel;

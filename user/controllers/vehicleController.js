@@ -1,6 +1,7 @@
 const { Types } = require("mongoose");
 const path = require("path");
 const ejs = require("ejs");
+const fs = require("fs");
 const functions = require("firebase-functions");
 const cors = require("cors")({ origin: true });
 const { transporter } = require("../../firebaseConfig");
@@ -26,6 +27,7 @@ module.exports.addVehicle = async (req, res) => {
 
     const validationError = checkRequiredFields({
       type,
+      token,
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
