@@ -142,6 +142,7 @@ const {
 const { validateStaffToken, validateUserToken } = require("../middlewares/authCheck");
 const { upload } = require("../utils/multer");
 const { uploadFiles } = require("../common/file-upload-controller");
+const { appVersion } = require("../common/appVersion");
 
 //other functions
 router.route("/uploadMake").get(uploadMake);
@@ -285,5 +286,6 @@ router.route("/uploadFiles").post(upload.array("images"), uploadFiles);
 router.route("/getContentPage/:pageId").get(getContentPage);
 router.route("/getContentPageList").get(getContentPageList);
 router.route("/sendEmailToUsers").post(sendEmailToUsers);
+router.route("/appVersion").get(appVersion);
 
 module.exports = router;
