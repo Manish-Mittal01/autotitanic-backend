@@ -1,7 +1,6 @@
 const { Types } = require("mongoose");
 const path = require("path");
 const ejs = require("ejs");
-const fs = require("fs");
 const functions = require("firebase-functions");
 const cors = require("cors")({ origin: true });
 const { transporter } = require("../../firebaseConfig");
@@ -17,18 +16,20 @@ const offerModel = require("../../Models/offerModel");
 
 module.exports.addVehicle = async (req, res) => {
   try {
-    const { condition, country, city, title, description, media, price, currency, type } = req.body;
-    const token = req.headers["x-access-token"];
+    const { country, city, title, description, media, price, currency, type, userDetails, status } =
+      req.body;
 
-    const isTokenValid = await UserServices.validateToken(token);
-    // console.log("isTokenValid", isTokenValid);
-    if (isTokenValid?.tokenExpired || !isTokenValid._id)
-      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
+    const requiredField = { type, country, city, userDetails };
+    const nonDraftRequiredField = { price, title, description, currency };
 
-    const validationError = checkRequiredFields({
-      type,
-      token,
-    });
+    const validationError = checkRequiredFields(
+      status !== "draft"
+        ? {
+            ...requiredField,
+            ...nonDraftRequiredField,
+          }
+        : requiredField
+    );
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
     if (media.length < 2)
@@ -55,17 +56,16 @@ module.exports.addVehicle = async (req, res) => {
 
     const newVehicle = {
       ...req.body,
-      user: isTokenValid._id,
+      user: userDetails._id,
       city: myCity,
     };
     const vehicle = new vehiclesModel(newVehicle);
-
     const result = await vehicle.save();
 
     return ResponseService.success(res, `${req.body.type} added successfully`, result);
   } catch (error) {
-    console.log("api error", error);
-    return ResponseService.failed(res, error, 400);
+    console.log("add vehicle error", error);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -250,8 +250,8 @@ module.exports.getResultCount = async (req, res) => {
 
     return ResponseService.success(res, "Count successful", response);
   } catch (error) {
-    console.log("error", error);
-    return ResponseService.failed(res, error);
+    console.log("error in result count", error);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -286,8 +286,8 @@ module.exports.getResultCountByFilter = async (req, res) => {
 
     return ResponseService.success(res, "Count successful", result);
   } catch (error) {
-    console.log("error", error);
-    return ResponseService.failed(res, "Something wrong happened");
+    console.log("error in filter count", error);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -566,9 +566,36 @@ module.exports.getVehicleDetails = async (req, res) => {
 module.exports.updateVehicle = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, reason } = req.body; //approved || rejected
+    const {
+      country,
+      city,
+      title,
+      description,
+      media,
+      price,
+      currency,
+      type,
+      userDetails,
+      status,
+      reason,
+    } = req.body;
 
-    if (!id) return ResponseService.failed(res, "id is required", StatusCode.notFound);
+    const requiredField = { type, country, city, userDetails };
+    const nonDraftRequiredField = { price, title, description, currency, status, media };
+
+    const validationError = checkRequiredFields(
+      status !== "draft"
+        ? {
+            ...requiredField,
+            ...nonDraftRequiredField,
+          }
+        : requiredField
+    );
+    if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
+    if (media.length < 2)
+      return ResponseService.failed(res, "Atleast 2 images required", StatusCode.badRequest);
+
+    if (!id) return ResponseService.failed(res, "id is required", StatusCode.badRequest);
     const isValidId = Types.ObjectId.isValid(id);
     if (!isValidId) return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
 
@@ -624,7 +651,7 @@ module.exports.deleteVehicle = async (req, res) => {
 
     return ResponseService.success(res, "Vehicle Deleted", result);
   } catch (error) {
-    return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+    return ResponseService.serverError(res, error);
   }
 };
 
@@ -704,12 +731,12 @@ module.exports.makeOffer = functions.https.onRequest((req, res) => {
 
       // returning result
       return transporter.sendMail(mailOptions, (erro, info) => {
-        if (erro) return ResponseService.failed(res, erro.toString(), StatusCode.badRequest);
+        if (erro) return ResponseService.failed(res, erro?.toString(), StatusCode.badRequest);
         else return ResponseService.success(res, "Offer sent successfully", result);
       });
     } catch (error) {
-      console.log("error", error);
-      return ResponseService.failed(res, "Something wrong happend", StatusCode.srevrError);
+      console.log("error making offer", error);
+      return ResponseService.serverError(res, error);
     }
   });
 });
@@ -747,7 +774,7 @@ const myFilter = (filters) => {
   Object.keys(filters).forEach((filter) => {
     const searchValue = filters[filter];
     if (
-      searchValue.toString() &&
+      searchValue?.toString() &&
       !extraFilters.includes(filter) &&
       !idFilters.includes(filter) &&
       filter !== "userType" &&
@@ -1027,7 +1054,7 @@ module.exports.getRelatedvehicles = async (req, res) => {
 
     return ResponseService.success(res, "Vehicles list found successfully", response);
   } catch (error) {
-    console.log("error in vehicle list", error);
+    console.log("error in related vehicle", error);
     return ResponseService.serverError(res, error);
   }
 };

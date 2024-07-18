@@ -54,11 +54,13 @@ module.exports.validateUser = async (req, res, next) => {
     const userExist = await UserModel.findOne({ _id: isTokenValid._id });
     if (!userExist) return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
 
-    if (userExist && (userExist.status === "blocked" || userExist.status === "deleted"))
-      return ResponseService.failed(res, "Invalid user", StatusCode.forbidden);
+    if (userExist && userExist.status === "deleted")
+      return ResponseService.failed(res, "Unauthorized", StatusCode.unauthorized);
+    if (userExist && userExist.status === "blocked")
+      return ResponseService.failed(res, "User is blocked", StatusCode.unauthorized);
 
     const request = req;
-    request.body = { ...request.body, user: userExist };
+    request.body = { ...request.body, userDetails: userExist };
     next();
   } catch (error) {
     ResponseService.serverError(res, error);

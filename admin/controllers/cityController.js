@@ -88,12 +88,10 @@ module.exports.addCities = async (req, res) => {
     });
     if (validationError) return ResponseService.failed(res, validationError, StatusCode.notFound);
 
+    const isCityExist = await cityModel.findOne({ name });
+
     const newCity = { name, country };
     const city = new cityModel(newCity);
-
-    const isCityExist = await cityModel.findOne({
-      name,
-    });
 
     let result = {};
 

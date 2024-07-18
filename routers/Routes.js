@@ -139,7 +139,7 @@ const {
   getStaffProfile,
   changeStaffPassword,
 } = require("../auth/staffAuth");
-const { validateStaffToken, validateUserToken } = require("../middlewares/authCheck");
+const { validateStaffToken, validateUserToken, validateUser } = require("../middlewares/authCheck");
 const { upload } = require("../utils/multer");
 const { uploadFiles } = require("../common/file-upload-controller");
 const { appVersion } = require("../common/appVersion");
@@ -181,9 +181,9 @@ router.route("/allCities/:countryId").get(getAllCities);
 router.route("/getResultCount").post(getResultCount);
 router.route("/getResultCountByFilter").post(getResultCountByFilter);
 router.route("/allVehicles").post(getAllvehicles);
-router.route("/addVehicle").post(addVehicle);
+router.route("/addVehicle").post(validateUser, addVehicle);
 router.route("/vehicleDetails/:vehicleId").get(getVehicleDetails);
-router.route("/updateVehicle/:id").post(updateVehicle);
+router.route("/updateVehicle/:id").post(validateUser, updateVehicle);
 router.route("/deleteVehicle/:id").post(deleteVehicle);
 router.route("/makeOffer").post(makeOffer);
 router.route("/getRelatedvehicles").post(getRelatedvehicles);
