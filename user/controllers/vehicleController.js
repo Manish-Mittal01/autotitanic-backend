@@ -580,21 +580,22 @@ module.exports.updateVehicle = async (req, res) => {
       reason,
     } = req.body;
 
-    const requiredField = { type, country, city, userDetails };
-    const nonDraftRequiredField = { price, title, description, currency, status, media };
-
-    const validationError = checkRequiredFields(
-      status !== "draft"
-        ? {
-            ...requiredField,
-            ...nonDraftRequiredField,
-          }
-        : requiredField
-    );
-    if (validationError) return ResponseService.failed(res, validationError, StatusCode.badRequest);
-    if (media.length < 2)
-      return ResponseService.failed(res, "Atleast 2 images required", StatusCode.badRequest);
-
+    if (status !== "deleted") {
+      const requiredField = { type, country, city, userDetails };
+      const nonDraftRequiredField = { price, title, description, currency, status, media };
+      const validationError = checkRequiredFields(
+        status !== "draft"
+          ? {
+              ...requiredField,
+              ...nonDraftRequiredField,
+            }
+          : requiredField
+      );
+      if (validationError)
+        return ResponseService.failed(res, validationError, StatusCode.badRequest);
+      if (media.length < 2)
+        return ResponseService.failed(res, "Atleast 2 images required", StatusCode.badRequest);
+    }
     if (!id) return ResponseService.failed(res, "id is required", StatusCode.badRequest);
     const isValidId = Types.ObjectId.isValid(id);
     if (!isValidId) return ResponseService.failed(res, "Invalid vehicle Id", StatusCode.badRequest);
