@@ -183,7 +183,7 @@ router.route("/getResultCountByFilter").post(getResultCountByFilter);
 router.route("/allVehicles").post(getAllvehicles);
 router.route("/addVehicle").post(validateUser, addVehicle);
 router.route("/vehicleDetails/:vehicleId").get(getVehicleDetails);
-router.route("/updateVehicle/:id").post(validateUser, updateVehicle);
+router.route("/updateVehicle/:id").post(updateVehicle);
 router.route("/deleteVehicle/:id").post(deleteVehicle);
 router.route("/makeOffer").post(makeOffer);
 router.route("/getRelatedvehicles").post(getRelatedvehicles);
