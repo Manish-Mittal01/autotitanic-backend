@@ -580,7 +580,7 @@ module.exports.updateVehicle = async (req, res) => {
       reason,
     } = req.body;
 
-    if (status !== "deleted") {
+    if (status === "pending") {
       const requiredField = { type, country, city, userDetails };
       const nonDraftRequiredField = { price, title, description, currency, status, media };
       const validationError = checkRequiredFields(
