@@ -566,22 +566,11 @@ module.exports.getVehicleDetails = async (req, res) => {
 module.exports.updateVehicle = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      country,
-      city,
-      title,
-      description,
-      media,
-      price,
-      currency,
-      type,
-      userDetails,
-      status,
-      reason,
-    } = req.body;
+    const { country, city, title, description, media, price, currency, type, status, reason } =
+      req.body;
 
     if (status === "pending") {
-      const requiredField = { type, country, city, userDetails };
+      const requiredField = { type, country, city };
       const nonDraftRequiredField = { price, title, description, currency, status, media };
       const validationError = checkRequiredFields(
         status !== "draft"
