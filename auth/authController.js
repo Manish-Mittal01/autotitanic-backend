@@ -1,5 +1,7 @@
 const UserModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
+const ejs = require("ejs");
+const path = require("path");
 const jwt = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const functions = require("firebase-functions");
@@ -65,17 +67,19 @@ module.exports.register = async (req, res) => {
       { expiresIn: "5m" }
     );
 
+    const message = await ejs.renderFile(
+      path.join(__dirname, "..", "templates", "emailVerify.ejs"),
+      {
+        name: userExist?.name,
+        link: `${process.env.WEBSITE_DOMAIN}verify/email?token=${emailToken}&email=${email}`,
+      }
+    );
+
     const mailOptions = {
-      from: "Autotitanic <autotitanic.com>",
+      from: process.env.MAIL_SENDER,
       to: email,
       subject: "Verify email",
-      html: `<p style="font-size: 16px;">
-      Click on the link below  to verify your account on autotitanic.com<br/>
-        <a href="${process.env.WEBSITE_DOMAIN}verify/email?token=${emailToken}&email=${email}">
-        Click here to Verify your email
-        <a/>
-      </p>
-    <br />`,
+      html: message,
     };
 
     // returning result
